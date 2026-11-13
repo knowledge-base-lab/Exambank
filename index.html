@@ -836,6 +836,7 @@ var S={bank:null,stats:{},wrong:{},essays:[],exams:[],eans:{},emark:{},settings:
 /* ---------- 資料保護、備份與還原（第一階段）---------- */
 var KNOWN={bank:1,stats:1,wrong:1,essays:1,exams:1,eans:1,emark:1,settings:1};
 var SNAP='examBank.snap.v1',RESCUE='examBank.rescue.v1';
+var PKEY='examBank.prog.v1',DKEY='examBank.done.v1',mainRaw=null,lastProgRaw=null,progMsg='',progNote='';
 var loadErr='',rawBad=null,saveBad=false,bkOpen=false,bkMsg='',bkIn='',bkOut='',bkPrev=null,bkNeedForce=false;
 function isObj(x){return !!x&&typeof x==='object'&&!Array.isArray(x)}
 function freshState(){return {bank:null,stats:{},wrong:{},essays:[],exams:[],eans:{},emark:{},settings:{order:'seq',shuffle:false,examN:20}}}
@@ -851,6 +852,7 @@ function checkMain(o){
 }
 /* 把儲存的文字載入記憶體。不認識的欄位原樣保留；格式不對就一個欄位都不改。 */
 function loadState(raw){
+  mainRaw=raw;
   var o;
   if(raw==null||raw==='')return '';
   try{o=JSON.parse(raw)}catch(e){return 'JSON 解析失敗（'+e.message+'）'}
@@ -867,7 +869,7 @@ function loadState(raw){
 }
 function save(){
   if(loadErr){saveBad=true;guardUpdate();return false}
-  var ok=LS.set(KEY,JSON.stringify(S));saveBad=!ok;guardUpdate();return ok;
+  var sv=JSON.stringify(S),ok=LS.set(KEY,sv);if(ok)mainRaw=sv;saveBad=!ok;guardUpdate();return ok;
 }
 
 /* ---- 同步 SHA-256（備份完整性檢查；不依賴 crypto.subtle，才能在點擊當下複製）---- */
@@ -897,7 +899,7 @@ function sha256(str){
 /* ---- 儲存區清單：所有 examBank.* 項目（快照與救援副本不算）---- */
 function storeKeys(){
   var ks=[];
-  try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('examBank.')===0&&k!==SNAP&&k!==RESCUE&&k!==ESKEY)ks.push(k)}}catch(e){}
+  try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('examBank.')===0&&k!==SNAP&&k!==RESCUE&&k!==ESKEY&&k!==PKEY&&k!==DKEY)ks.push(k)}}catch(e){}
   if(ks.indexOf(KEY)<0)ks.push(KEY);
   ks.sort(function(a,b){return a===KEY?-1:b===KEY?1:(a<b?-1:1)});
   return ks;
@@ -924,7 +926,7 @@ function bytesOf(s){return new TextEncoder().encode(s).length}
 function kb(n){return n<1024?n+' B':(n/1024).toFixed(n<10240?1:0)+' KB'}
 function usage(){
   var tot=0,n=0,snap=0;
-  try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),v=localStorage.getItem(k)||'';var b=bytesOf(k)+bytesOf(v);if(k===SNAP||k===RESCUE||k===ESKEY)snap+=b;else if(k.indexOf('examBank.')===0){tot+=b;n++}}}catch(e){}
+  try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),v=localStorage.getItem(k)||'';var b=bytesOf(k)+bytesOf(v);if(k===SNAP||k===RESCUE||k===ESKEY||k===PKEY||k===DKEY)snap+=b;else if(k.indexOf('examBank.')===0){tot+=b;n++}}}catch(e){}
   return {bytes:tot,stores:n,snap:snap};
 }
 
@@ -956,7 +958,7 @@ function validateBackup(text){
   var rows=[],i,m,raw,c,err='';
   for(i=0;i<j.manifest.length;i++){
     m=j.manifest[i];
-    if(!isObj(m)||typeof m.key!=='string'||m.key.indexOf('examBank.')!==0||m.key===SNAP||m.key===RESCUE||m.key===ESKEY)return {err:'資料清單含不合法的儲存區名稱。目前資料沒有改變。'};
+    if(!isObj(m)||typeof m.key!=='string'||m.key.indexOf('examBank.')!==0||m.key===SNAP||m.key===RESCUE||m.key===ESKEY||m.key===PKEY||m.key===DKEY)return {err:'資料清單含不合法的儲存區名稱。目前資料沒有改變。'};
     raw=j.stores[m.key];
     if(typeof raw!=='string')return {err:'儲存區「'+m.key+'」沒有內容。目前資料沒有改變。'};
     if(raw.length!==m.chars||sha256(raw)!==m.sha256)return {err:'儲存區「'+m.key+'」的內容與檢查碼不符，備份可能被截斷或修改。目前資料沒有改變。'};
@@ -1249,6 +1251,7 @@ function homeHTML(){
   var P=pool().length,wl=wrongList().length,exN=S.settings.examN>0?Math.min(S.settings.examN,P):P;
   var rand=S.settings.order==='rand';
   var h='<div class="stack"><header><h1>Exam Bank</h1><p class="sub">繁體中文考試題庫練習</p></header>';
+  h+=progCardHTML();
   if(!S.bank)h+='<div class="note">目前是 '+SAMPLE.length+' 題範例題。<button data-act="tab" data-v="bank">貼上你的題目</button>即可換成自己的題庫。</div>';
   if(exF){var xm=examById(exF);h+='<div class="note">目前只練習：'+esc(xm?xm.name:'這份考卷')+'（'+P+' 題）<button data-act="exam-clear">改回全部</button></div>'}
   h+='<div class="band"><div><b>'+B.length+'</b><span>題庫</span></div><div><b>'+seen+'</b><span>已練習</span></div><div><b>'+acc+'</b><span>正確率</span></div><div><b>'+wl+'</b><span>錯題</span></div></div>';
@@ -1379,7 +1382,11 @@ function quizHTML(){
   var q=sess.list[sess.i],n=sess.list.length,sel=sess.sel[sess.i],exam=sess.mode==='exam';
   var reveal=!exam&&sel!==null;
   var h='<div class="stack" style="gap:16px"><div><div class="qtop"><button class="x" data-act="exit" aria-label="離開">✕</button><span class="cnt">'+(sess.i+1)+' / '+n+'</span>'+(exam?'<span class="clock" id="clock">'+fmt(Math.round((Date.now()-sess.t0)/1000))+'</span>':'')+'</div><div class="bar"><i style="width:'+((sess.i+(reveal?1:0))/n*100)+'%"></i></div></div>';
-  if(sess.confirmExit)h+='<div class="note">放棄這次'+(exam?'模擬考':'練習')+'？<button data-act="exit-yes">放棄</button>　<button data-act="exit-no">繼續作答</button></div>';
+  if(sess.frozen)h+='<div class="note alert stack" style="gap:8px">此練習已在其他分頁變更或完成，這個畫面已停止作答。<button class="btn sm" style="text-decoration:none" data-act="reload">重新整理</button></div>';
+  if(sess.commitErr)h+='<div class="note alert stack" style="gap:8px">'+esc(sess.commitErr)+(sess.commitStale?'<button class="btn sm" style="text-decoration:none" data-act="reload">重新載入</button>':'')+'</div>';
+  if(sess.confirmExit&&exam)h+='<div class="note">放棄這次模擬考？<button data-act="exit-yes">放棄</button>　<button data-act="exit-no">繼續作答</button></div>';
+  else if(sess.confirmExit&&sess.confirmDrop)h+='<div class="note alert stack" style="gap:10px"><span>確定放棄這次練習？已作答的內容會清除，且不會計入統計。</span><button class="btn warn" style="text-decoration:none;padding:0 18px" data-act="exit-drop-yes">確定放棄</button><button class="btn" style="text-decoration:none;padding:0 18px;color:var(--ink)" data-act="exit-drop-no">返回</button></div>';
+  else if(sess.confirmExit)h+='<div class="note stack" style="gap:10px"><span>要離開這次練習嗎？</span><button class="btn" style="text-decoration:none;padding:0 18px;color:var(--ink)" data-act="exit-no">繼續作答</button><button class="btn primary" style="text-decoration:none;padding:0 18px;color:var(--on-accent)" data-act="exit-keep">離開並保留進度</button><button class="btn warn" style="text-decoration:none;padding:0 18px" data-act="exit-drop">放棄練習</button></div>';
   h+='<div class="card">'+(q.cat?'<span class="tag">'+esc(q.cat)+'</span>':'')+tagsHTML(q)+'<p class="qtext">'+esc(q.q)+'</p>'+imgsHTML(q.id,'q')+'</div><div class="opts">';
   h+=q.opts.map(function(o,k){
     var c='opt';
@@ -1399,8 +1406,9 @@ function quizDock(){
     return '<div class="dockin"><button class="btn" data-act="prev"'+(sess.i===0?' disabled':'')+'>上一題</button>'+
       (last?'<button class="btn primary" data-act="finish">交卷'+(un?'（'+un+' 題未答）':'')+'</button>':'<button class="btn primary" data-act="next">下一題</button>')+'</div>';
   }
-  if(sel===null)return '<div class="dockin"><button class="btn" disabled>請選擇答案</button></div>';
-  return '<div class="dockin"><button class="btn primary" data-act="'+(last?'finish':'next')+'">'+(last?'完成':'下一題')+'</button></div>';
+  var pv='<button class="btn" data-act="prev"'+(sess.i===0||sess.committing||sess.frozen?' disabled':'')+'>上一題</button>';
+  if(sel===null)return '<div class="dockin">'+pv+'<button class="btn" disabled>請選擇答案</button></div>';
+  return '<div class="dockin">'+pv+'<button class="btn primary" data-act="'+(last?'finish':'next')+'"'+(sess.committing||sess.frozen?' disabled':'')+'>'+(sess.committing?'提交中…':last?'完成':'下一題')+'</button></div>';
 }
 function resultHTML(){
   var r=sess.result,pct=Math.round(r.ok/r.n*100);
@@ -1440,15 +1448,17 @@ function go(v){view=v;render();window.scrollTo(0,0)}
 function prep(q){
   if(!S.settings.shuffle)return q;
   var idx=shuffle(q.opts.map(function(_,i){return i}));
-  return Object.assign({},q,{opts:idx.map(function(i){return q.opts[i]}),ans:idx.indexOf(q.ans)});
+  return Object.assign({},q,{opts:idx.map(function(i){return q.opts[i]}),ans:idx.indexOf(q.ans),_perm:idx});
 }
 function start(mode){
+  if(mode!=='exam'&&LS.get(PKEY)!=null){toast('有未完成的練習，請先選擇「繼續上次練習」或「重新開始」');return}
   var list=mode==='wrong'?wrongList():pool().slice();
   if(!list.length){toast('沒有可用的題目');return}
   if(mode!=='practice'||S.settings.order==='rand')list=shuffle(list);
   if(mode==='exam'&&S.settings.examN>0)list=list.slice(0,S.settings.examN);
   list=list.map(prep);
   sess={mode:mode,list:list,i:0,sel:list.map(function(){return null}),t0:Date.now(),confirmExit:false};
+  if(mode!=='exam'){sess.sid=progNewSid();sess.sig=progSig(list);if(!progSave())toast('無法暫存進度，這次練習離開後將無法續作')}
   go('quiz');
 }
 function rec(q,good){
@@ -1458,6 +1468,7 @@ function rec(q,good){
   save();
 }
 function finish(){
+  if(sess.mode!=='exam'){commitPractice();return}
   var ok=0,miss=[];
   sess.list.forEach(function(q,i){
     var s=sess.sel[i],good=s===q.ans;
@@ -1467,6 +1478,152 @@ function finish(){
   sess.result={ok:ok,n:sess.list.length,miss:miss,secs:Math.round((Date.now()-sess.t0)/1000)};
   go('result');
 }
+/* ---------- 未完成練習：自動儲存、續作與完成後提交（一般練習／錯題複習；模擬考不使用）----------
+   進度存在獨立的 examBank.prog.v1；作答期間不碰 S.stats / S.wrong。
+   提交時（commitPractice）才一次寫入統計，並在同一次寫入放進提交帳本 S.commits；
+   主資料寫入並讀回驗證成功後，才更新 examBank.done.v1 並清除進度。 */
+function progNewSid(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function bankMap(){var m={};bank().forEach(function(q){m[String(q.id)]=q});return m}
+function progSig(list){
+  var m=bankMap(),parts=[];
+  list.forEach(function(q){var o=m[String(q.id)]||q;parts.push(String(o.id)+'\u0001'+o.q+'\u0001'+o.opts.join('\u0002')+'\u0001'+o.ans)});
+  return sha256(parts.join('\u0003'));
+}
+function progRead(){
+  var raw=LS.get(PKEY);if(raw==null)return null;
+  try{var p=JSON.parse(raw);return isObj(p)?{p:p,raw:raw}:{bad:'進度資料格式不正確',raw:raw}}catch(e){return {bad:'進度資料無法解析',raw:raw}}
+}
+function doneIds(){
+  var r=LS.get(DKEY);if(r==null)return [];
+  try{var o=JSON.parse(r);return Array.isArray(o.ids)?o.ids:[]}catch(e){return []}
+}
+function isCommitted(sid){return !!(S.commits&&S.commits[sid])||doneIds().indexOf(sid)>=0}
+function progSave(){
+  if(!sess||!sess.sid||sess.mode==='exam')return false;
+  if(sess.frozen||sess.committed)return false;
+  if(isCommitted(sess.sid)){sess.frozen=true;return false}
+  var rec_={v:1,sid:sess.sid,mode:sess.mode,sig:sess.sig,n:sess.list.length,i:sess.i,
+    ids:sess.list.map(function(q){return q.id}),
+    perm:sess.list.map(function(q){return q._perm||0}),
+    sel:sess.sel.slice(),saved:Date.now()};
+  var s=JSON.stringify(rec_);
+  if(!LS.set(PKEY,s)||LS.get(PKEY)!==s)return false;
+  lastProgRaw=s;return true;
+}
+function progDrop(){try{localStorage.removeItem(PKEY)}catch(e){}lastProgRaw=null}
+/* 逐項檢查；任何一項不符就回報原因，不改動任何資料 */
+function progValid(p){
+  var bad=function(w){return {ok:false,why:w}};
+  if(!p||p.v!==1)return bad('進度版本不明');
+  if(p.mode!=='practice'&&p.mode!=='wrong')return bad('進度的練習模式不正確');
+  if(!p.sid||typeof p.sid!=='string')return bad('進度缺少識別碼');
+  var n=p.n;
+  if(!Number.isInteger(n)||n<1||!Array.isArray(p.ids)||p.ids.length!==n||!Array.isArray(p.perm)||p.perm.length!==n||!Array.isArray(p.sel)||p.sel.length!==n)return bad('進度內容不完整');
+  if(!Number.isInteger(p.i)||p.i<0||p.i>=n)return bad('進度的題號不正確');
+  var m=bankMap(),list=[],k,q,pm,j;
+  for(k=0;k<n;k++){
+    q=m[String(p.ids[k])];if(!q)return bad('題庫中找不到第 '+(k+1)+' 題（題庫已變更）');
+    pm=p.perm[k];
+    if(pm!==0){
+      if(!Array.isArray(pm)||pm.length!==q.opts.length)return bad('第 '+(k+1)+' 題的選項順序與現有題目不符');
+      var seen={};for(j=0;j<pm.length;j++){if(!Number.isInteger(pm[j])||pm[j]<0||pm[j]>=q.opts.length||seen[pm[j]])return bad('第 '+(k+1)+' 題的選項順序不正確');seen[pm[j]]=1}
+    }
+    if(p.sel[k]!==null&&(!Number.isInteger(p.sel[k])||p.sel[k]<0||p.sel[k]>=q.opts.length))return bad('第 '+(k+1)+' 題的已選答案不正確');
+    list.push(pm===0?q:Object.assign({},q,{opts:pm.map(function(x){return q.opts[x]}),ans:pm.indexOf(q.ans),_perm:pm}));
+  }
+  if(progSig(list.map(function(x){return m[String(x.id)]}))!==p.sig)return bad('題目內容已變更，無法保證與原本相同');
+  return {ok:true,list:list};
+}
+function progResume(){
+  var r=progRead();if(!r){progMsg='';render();return}
+  if(r.bad){progMsg=r.bad;render();return}
+  var p=r.p;
+  if(isCommitted(p.sid)){progDrop();progMsg='';render();toast('上次練習已完成並計入統計');return}
+  var v=progValid(p);
+  if(!v.ok){progMsg='無法恢復：'+v.why+'。進度仍保留，不會被改動。';render();return}
+  sess={mode:p.mode,list:v.list,i:p.i,sel:p.sel.slice(),t0:Date.now(),confirmExit:false,sid:p.sid,sig:p.sig};
+  lastProgRaw=r.raw;progMsg='';go('quiz');
+}
+function progCardHTML(){
+  var r=progRead();if(!r)return progMsg?'<div class="note alert">'+esc(progMsg)+'</div>':'';
+  var h='<section class="card stack" style="gap:12px"><h2>未完成的練習</h2>';
+  if(r.bad)h+='<p class="msg" style="color:var(--bad)">'+esc(r.bad)+'。</p>';
+  else{
+    var p=r.p,done=0;(p.sel||[]).forEach(function(x){if(x!==null)done++});
+    var t=new Date(p.saved||0),pad=function(x){return (x<10?'0':'')+x};
+    h+='<p class="msg">'+(p.mode==='wrong'?'錯題複習':'一般練習')+'：第 '+((p.i|0)+1)+' / '+(p.n|0)+' 題，已作答 '+done+' 題<br>上次儲存：'+(p.saved?(t.getMonth()+1)+'/'+t.getDate()+' '+pad(t.getHours())+':'+pad(t.getMinutes()):'—')+'<br>完成練習後才會計入統計。</p>';
+  }
+  if(progMsg)h+='<div class="note alert">'+esc(progMsg)+'</div>';
+  h+=(r.bad?'':'<button class="btn primary" data-act="prog-resume">繼續上次練習</button>')+'<button class="btn" data-act="'+(r.bad?'prog-drop':'prog-restart')+'">'+(r.bad?'捨棄這筆進度':'重新開始')+'</button>';
+  if(!r.bad)h+='<p class="msg">「重新開始」會捨棄這筆進度（不計入統計），需再按一次確認。</p>';
+  return h+'</section>';
+}
+/* 啟動時：進度若已在帳本裡（上次提交成功但來不及清除），只清進度，不再寫統計 */
+function progReconcile(){
+  var r=progRead();if(!r||r.bad)return;
+  if(isCommitted(r.p.sid)){progDrop();progNote='上次練習已完成並計入統計'}
+}
+/* ---- 提交（互斥鎖 + 資料版本檢查 + 帳本）---- */
+function progLock(fn){
+  var L=null;try{L=navigator.locks}catch(e){}
+  if(!L||!L.request)return Promise.resolve(fn(false));
+  var ac=new AbortController(),granted=false,t=setTimeout(function(){ac.abort()},10000);
+  return L.request('examBank-commit',{signal:ac.signal},function(){granted=true;clearTimeout(t);return fn(true)})
+    .catch(function(e){clearTimeout(t);if(granted)throw e;if(e&&e.name==='AbortError')return {err:'目前無法取得提交鎖（其他分頁正在提交）。進度已保留，請稍後再按「完成」。'};return fn(false)});
+}
+function commitCore(sess_,locked){
+  if(loadErr)return {err:'主資料讀取失敗，為避免覆蓋已停止提交。進度已保留。'};
+  var sid=sess_.sid;
+  /* 1. 主資料必須與這個分頁上次讀寫時完全一致，否則可能已被其他分頁更新 */
+  if(LS.get(KEY)!==mainRaw)return {err:'主資料已在其他分頁更新，為避免用舊資料覆蓋，已中止提交。進度已保留，請重新載入頁面後再按「完成」。',stale:true};
+  /* 2. 已提交過就不再寫統計 */
+  if(isCommitted(sid))return {already:true};
+  /* 3. 在記憶體套用本次有效作答（規則與 rec() 相同），並放進帳本 */
+  var snap={stats:{},wrong:{},hadC:!!S.commits,commits:S.commits?JSON.parse(JSON.stringify(S.commits)):null};
+  sess_.list.forEach(function(q,i){var s=sess_.sel[i];if(s===null)return;
+    if(!(q.id in snap.stats)){snap.stats[q.id]=S.stats[q.id]?{c:S.stats[q.id].c,w:S.stats[q.id].w}:null;snap.wrong[q.id]=S.wrong[q.id]?1:0}});
+  var back=function(){
+    Object.keys(snap.stats).forEach(function(id){if(snap.stats[id]===null)delete S.stats[id];else S.stats[id]=snap.stats[id];if(snap.wrong[id])S.wrong[id]=1;else delete S.wrong[id]});
+    if(snap.hadC)S.commits=snap.commits;else delete S.commits;
+  };
+  sess_.list.forEach(function(q,i){var s=sess_.sel[i];if(s===null)return;
+    var good=s===q.ans,st=S.stats[q.id]||{c:0,w:0};good?st.c++:st.w++;S.stats[q.id]=st;
+    if(!good)S.wrong[q.id]=1;else if(sess_.mode==='wrong')delete S.wrong[q.id]});
+  S.commits=S.commits||{};S.commits[sid]=Date.now();
+  var ks=Object.keys(S.commits).sort(function(a,b){return S.commits[b]-S.commits[a]});
+  ks.slice(20).forEach(function(k){delete S.commits[k]});
+  /* 4. 一次寫入並讀回驗證 */
+  var old=mainRaw,nv=JSON.stringify(S),ok=LS.set(KEY,nv)&&LS.get(KEY)===nv;
+  if(!ok){back();if(LS.get(KEY)!==old&&old!=null)LS.set(KEY,old);return {err:'統計寫入失敗（儲存空間可能不足）。進度已保留，統計沒有變動，可以再按一次「完成」重試。'}}
+  mainRaw=nv;saveBad=false;guardUpdate();
+  /* 5. 主資料與帳本確認成功後，才更新 done 紀錄，再清除進度 */
+  var d=doneIds().filter(function(x){return x!==sid});d.push(sid);d=d.slice(-20);
+  var dv=JSON.stringify({ids:d}),dok=LS.set(DKEY,dv)&&LS.get(DKEY)===dv;
+  return {ok:true,doneWarn:!dok};
+}
+function commitPractice(){
+  if(!sess||sess.committing||sess.frozen||sess.committed)return;
+  var cur=sess;cur.committing=true;cur.commitErr='';cur.commitStale=false;render();
+  progLock(function(locked){return commitCore(cur,locked)}).then(function(r){
+    cur.committing=false;
+    if(r.err){cur.commitErr=r.err;cur.commitStale=!!r.stale;if(sess===cur)render();return}
+    /* 成功（或帳本顯示已提交）：清除進度並顯示結果 */
+    var p=progRead();if(!p||(p.p&&p.p.sid===cur.sid))progDrop();
+    cur.committed=true;
+    var ok=0,miss=[];cur.list.forEach(function(q,i){var s=cur.sel[i],good=s===q.ans;good?ok++:miss.push({q:q,s:s})});
+    cur.result={ok:ok,n:cur.list.length,miss:miss,secs:Math.round((Date.now()-cur.t0)/1000)};
+    if(sess===cur)go('result');
+    if(r.already)toast('這份練習先前已計入統計，沒有重複計算');
+  },function(e){cur.committing=false;cur.commitErr='提交時發生錯誤：'+(e&&e.message||e)+'。進度已保留，統計沒有變動。';if(sess===cur)render()});
+}
+/* 離開背景時再存一次；其他分頁改動同一份進度時，這個分頁停止作答以免兩邊分歧 */
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'&&sess&&sess.sid&&!sess.committing&&!sess.committed)progSave()});
+window.addEventListener('pagehide',function(){if(sess&&sess.sid&&!sess.committing&&!sess.committed)progSave()});
+window.addEventListener('storage',function(e){
+  if(e.key===PKEY&&sess&&sess.sid&&!sess.committed&&e.newValue!==lastProgRaw){sess.frozen=true;if(view==='quiz')render()}
+  else if(e.key===PKEY&&view==='home')render();
+});
+
 function wsk(s){return String(s).normalize('NFKC').replace(/\s+/g,'')}
 function qkey(q){return wsk(q.q)+'\u0001'+q.opts.map(wsk).sort().join('\u0002')}
 function ctext(q){return wsk(q.opts[q.ans])}
@@ -2002,6 +2159,7 @@ function examsViewHTML(){
   L.forEach(function(m){nM+=m.mcq.length;nE+=m.ess.length});
   var F=L.filter(function(m){return (!exfY||m.year===exfY)&&(!exfR||m.round===exfR)&&(!exfS||m.subject===exfS)});
   var h='<div class="stack"><header><h1>考卷</h1><p class="sub">共 '+L.length+' 份考卷・選擇題 '+nM+' 題・申論題 '+nE+' 題</p></header>';
+  h+=progCardHTML();
   if(!L.length)return h+'<div class="empty">還沒有考卷。<br>到「題庫」頁匯入題目或 PDF 後，會依年度與次數歸入考卷。</div></div>';
   var yrs=uniq(L.map(function(m){return m.year})).sort(function(a,b){return b-a});
   var rds=uniq(L.map(function(m){return m.round})).sort(function(a,b){return a-b});
@@ -2349,16 +2507,23 @@ document.addEventListener('click',function(e){
   else if(a==='start'){start(b.dataset.mode)}
   else if(a==='pick'){
     var i=sess.i,q=sess.list[i],kk=Number(b.dataset.k);
-    if(sess.mode!=='exam'){if(sess.sel[i]!==null)return;sess.sel[i]=kk;rec(q,kk===q.ans)}
+    if(sess.mode!=='exam'){if(sess.sel[i]!==null||sess.frozen||sess.committing)return;sess.sel[i]=kk;if(!progSave())toast('進度暫存失敗')}
     else sess.sel[i]=kk;
     render();
   }
-  else if(a==='next'){sess.i++;render();window.scrollTo(0,0)}
-  else if(a==='prev'){sess.i--;render();window.scrollTo(0,0)}
+  else if(a==='next'){if(sess.mode!=='exam'&&(sess.frozen||sess.committing))return;sess.i++;if(sess.mode!=='exam'&&!progSave())toast('進度暫存失敗');render();window.scrollTo(0,0)}
+  else if(a==='prev'){if(sess.mode!=='exam'){if(sess.frozen||sess.committing||sess.i===0)return;sess.i--;if(!progSave())toast('進度暫存失敗')}else sess.i--;render();window.scrollTo(0,0)}
   else if(a==='finish'){finish()}
   else if(a==='exit'){sess.confirmExit=true;render()}
   else if(a==='exit-no'){sess.confirmExit=false;render()}
   else if(a==='exit-yes'){sess=null;go('home')}
+  else if(a==='exit-keep'){if(sess.committing)return;if(sess.frozen||!progSave()){toast('進度儲存失敗，已留在練習中');return}sess=null;go('home');toast('已保留進度')}
+  else if(a==='exit-drop'){sess.confirmDrop=true;render()}
+  else if(a==='exit-drop-no'){sess.confirmDrop=false;render()}
+  else if(a==='exit-drop-yes'){if(sess.committing)return;progDrop();sess=null;go('home');toast('已放棄練習，未計入統計')}
+  else if(a==='reload'){location.reload()}
+  else if(a==='prog-resume'){progResume()}
+  else if(a==='prog-restart'||a==='prog-drop'){twice(b,a,function(){progDrop();progMsg='';render();toast('已捨棄未完成的練習')})}
   else if(a==='import'){var r0=parseInput(impText);r0.file='貼上文字';if(r0.fatal){impMsg=r0.fatal;impReport=null;render();return}pending=null;applyImport(r0,b,true)}
   else if(a==='import-file'){applyImport(pending,b,false)}
   else if(a==='import-cancel'){pending=null;impOpen=false;render()}
@@ -2379,6 +2544,8 @@ document.addEventListener('click',function(e){
     });
   }
 });
+progReconcile();
 render();
+if(progNote){toast(progNote);progNote=''}
 })();
 </script>

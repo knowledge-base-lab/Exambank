@@ -1,0 +1,2361 @@
+<title>Exam Bank 第二階段（測試版）</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: one-column phone app (max 560px), fixed bottom dock for tabs / quiz actions. */
+:root{
+  --bg:#F2F4F6; --surface:#FFFFFF; --ink:#16212B; --muted:#5A6774; --line:#DCE2E8;
+  --accent:#3F67C7; --on-accent:#FFFFFF; --accent-ink:#2C4FA3; --accent-soft:#E3ECFB;
+  --good:#1B7F52; --good-bg:#E2F4E9; --bad:#B83232; --bad-bg:#FBE5E5;
+  --sans:'Noto Sans TC',system-ui,-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1418; --surface:#18202A; --ink:#E8EDF1; --muted:#9AA7B3; --line:#2A3540;
+    --accent:#7FA2F0; --on-accent:#0B1630; --accent-ink:#A9C1F7; --accent-soft:#1B2A4A;
+    --good:#4CC38A; --good-bg:#12301F; --bad:#F07474; --bad-bg:#3A1717; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1418; --surface:#18202A; --ink:#E8EDF1; --muted:#9AA7B3; --line:#2A3540;
+  --accent:#7FA2F0; --on-accent:#0B1630; --accent-ink:#A9C1F7; --accent-soft:#1B2A4A;
+  --good:#4CC38A; --good-bg:#12301F; --bad:#F07474; --bad-bg:#3A1717; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--sans);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
+.app{max-width:560px;margin:0 auto;padding-block:20px 120px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.stack{display:flex;flex-direction:column;gap:20px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-size:28px;line-height:1.2;font-weight:700;letter-spacing:.01em}
+h2{font-size:13px;font-weight:700;letter-spacing:.12em;color:var(--muted)}
+.sub{color:var(--muted);font-size:14px;margin:4px 0 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.band{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.band div{padding:12px 4px;text-align:center;min-width:0}
+.band div+div{border-left:1px solid var(--line)}
+.band b{display:block;font:500 20px/1.2 var(--mono)}
+.band span{font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:40px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px}
+.chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+.chip small{font-family:var(--mono);color:var(--muted);margin-left:4px}
+.btn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:56px;padding:0 18px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-weight:500;text-align:left}
+.btn small{color:var(--muted);font:400 13px var(--mono)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.btn.primary small{color:var(--on-accent);opacity:.75}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.warn{border-color:var(--bad);color:var(--bad)}
+.btn.sm{min-height:44px;width:auto;justify-content:center;padding:0 16px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.seg button{flex:1;min-height:44px;padding:0 6px;font-size:14px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accent);color:var(--on-accent);font-weight:700}
+.setrow{display:flex;flex-direction:column;gap:6px}
+.setrow label,.lbl{font-size:13px;color:var(--muted)}
+.note{background:var(--accent-soft);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:14px}
+.note button{color:var(--accent-ink);font-weight:700;text-decoration:underline;padding:0}
+.qtop{display:flex;align-items:center;gap:12px}
+.qtop .x{min-width:44px;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:18px}
+.qtop .cnt{font:500 15px var(--mono)}
+.qtop .clock{margin-left:auto;font:500 15px var(--mono);color:var(--muted)}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.tag{display:inline-block;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 8px;margin:0 6px 8px 0}
+.tag.warn{color:var(--accent-ink);border-color:var(--accent)}
+.tag.bad{color:var(--bad);border-color:var(--bad);font-weight:500}
+.qimgs{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.qimg{display:block;width:100%;padding:6px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:zoom-in;font:inherit;color:#555;text-align:center}
+.qimg img{display:block;max-width:100%;height:auto;margin:0 auto}
+.qimg.bad{cursor:default;background:var(--bad-bg);color:var(--bad);padding:10px;font-size:14px}
+#imgv{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.95);display:flex;flex-direction:column;color:#fff}
+#imgv .ivbar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top))}
+#imgv button{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid #8a8a8a;background:#222;color:#fff;font-size:16px;font-family:inherit}
+#ivstage{flex:1;position:relative;overflow:hidden;touch-action:none;display:flex;align-items:center;justify-content:center}
+#ivimg{max-width:100%;max-height:100%;transform-origin:center center;user-select:none;-webkit-user-select:none;background:#fff;border-radius:4px;will-change:transform}
+#imgv .ivfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;padding-bottom:max(10px,env(safe-area-inset-bottom));font-size:13px;color:#cfcfcf}
+.qtext{font-size:18px;line-height:1.7;font-weight:500;margin:0}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:start;width:100%;min-height:56px;padding:12px 14px;text-align:left;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+.opt .ltr{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font:500 14px var(--mono)}
+.opt .otxt{padding-top:3px;min-width:0;overflow-wrap:anywhere}
+.opt.picked{border-color:var(--accent);background:var(--accent-soft)}
+.opt.picked .ltr{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.opt.good{border-color:var(--good);background:var(--good-bg)}
+.opt.good .ltr{background:var(--good);border-color:var(--good);color:var(--surface)}
+.opt.bad{border-color:var(--bad);background:var(--bad-bg)}
+.opt.bad .ltr{background:var(--bad);border-color:var(--bad);color:var(--surface)}
+.opt:disabled{opacity:1;cursor:default}
+.exp{border-radius:12px;background:var(--surface);border:1px solid var(--line);padding:12px 14px;font-size:15px}
+.exp b{display:block;font-size:12px;letter-spacing:.12em;color:var(--muted);margin-bottom:2px}
+.verdict{font-weight:700;margin:0}
+.verdict.good{color:var(--good)} .verdict.bad{color:var(--bad)}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.dockin{max-width:560px;margin:0 auto;display:flex;gap:10px;padding:10px 0}
+.dock.tabs{padding-left:0;padding-right:0}
+.dock.tabs .dockin{padding:0;gap:0}
+.tab{position:relative;flex:1;min-height:58px;font-size:15px;color:var(--muted)}
+.tab.on{color:var(--ink);font-weight:700}
+.tab.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+.dot{font:500 11px var(--mono);font-style:normal;background:var(--bad);color:var(--surface);border-radius:999px;padding:1px 6px;margin-left:6px}
+.dock .btn{justify-content:center}
+.score{font:500 56px/1.1 var(--mono);margin:0}
+.score small{font-size:24px;color:var(--muted)}
+.miss{display:flex;flex-direction:column;gap:8px}
+.miss p{margin:0}
+.ans{font-size:15px}
+.ans .g{color:var(--good);font-weight:500} .ans .r{color:var(--bad);font-weight:500}
+textarea{width:100%;min-height:170px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:400 15px/1.6 var(--sans);resize:vertical}
+pre{margin:0;padding:12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;font:400 13px/1.6 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+details summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:500}
+.qlist{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.qlist li{display:grid;grid-template-columns:32px 1fr;gap:6px}
+.qlist .n{font-family:var(--mono);color:var(--muted)}
+.qlist span+span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.msg{font-size:14px;margin:0}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.vh:focus-visible+label{outline:2px solid var(--accent-ink);outline-offset:2px}
+.empty{text-align:center;color:var(--muted);padding:32px 12px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;max-width:90vw}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .25s}}
+.orow{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:center}
+.orow b{text-align:center;color:var(--muted)}
+input[type=text]{width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:400 15px/1.5 var(--sans)}
+input[type=text]:focus-visible,input[type=checkbox]:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
+.esband{display:grid;grid-template-columns:1fr 1fr;gap:8px}.esband div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;min-width:0}.esband b{display:block;font:500 22px/1.2 var(--mono)}.esband span{font-size:13px;color:var(--muted)}
+.chk{display:flex;align-items:center;gap:10px;min-height:44px;font-size:15px}
+.chk input{width:22px;height:22px;flex:none;accent-color:var(--accent)}
+.pq.off{opacity:.62}
+.pre{white-space:pre-wrap;overflow-wrap:anywhere}
+select{width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:400 15px/1.5 var(--sans)}
+select:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
+.etitle{font:600 18px/1.4 var(--sans)}
+.note.alert{background:var(--bad-bg);border:1px solid var(--bad)}
+.note.alert button{color:var(--bad)}
+.tag.bad{background:var(--bad-bg)}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pills.four{display:grid;grid-template-columns:1fr 1fr}
+.pill{min-height:46px;padding:8px 14px;border-radius:999px;border:1px solid transparent;background:var(--bg);font-size:15px;font-weight:500;text-align:center}
+.pill.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.pill.bad.on{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.fl{display:block;font-size:15px;font-weight:700;color:var(--ink)}
+.setrow label.fl{font-size:15px;color:var(--ink)}
+.hmcard select{min-height:48px;border-radius:12px;font-size:16px}
+#guard:not(:empty){margin-bottom:12px}
+.band.two{grid-template-columns:repeat(2,1fr)}
+</style>
+
+<div class="app"><div id="guard"></div><main id="view"></main></div>
+<nav class="dock tabs" id="dock"></nav>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var L='ABCDEFGH', KEY='examBank.v1';
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+var LS={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}};
+
+/* ---------- 申論題匯入（獨立於「備份與還原」；不呼叫 essayRestore）----------
+   只新增題目到 S.essays；不改選擇題、作答(eans)、自評(emark)、考卷(exams)、統計。
+   復原用的獨立儲存區 examBank.esimp.v1（不進完整備份，也不使用共用的「還原前快照」）：
+   {ver:1, st:'pending'|'done'|'failed', at, label, pre:[匯入前的申論題原始資料]|null, added:[新增的 id…]} */
+var ESKEY='examBank.esimp.v1',esI=null;
+function esiRec(){
+  var r=LS.get(ESKEY);if(r==null)return null;
+  try{var o=JSON.parse(r);return (isObj(o)&&o.ver===1&&typeof o.st==='string'&&Array.isArray(o.added))?o:null}catch(e){return null}
+}
+function esiPut(o){var s=JSON.stringify(o);return LS.set(ESKEY,s)&&LS.get(ESKEY)===s}
+function esiDrop(){try{localStorage.removeItem(ESKEY)}catch(e){}return LS.get(ESKEY)==null}
+function esiTxt(s,n){s=String(s==null?'':s).replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n)+'…':s}
+function esiNorm(o){
+  var r=Object.assign({},o);
+  function blank(k){return r[k]==null||String(r[k]).trim()===''}
+  if(blank('q')&&o.question!=null)r.q=o.question;
+  if(blank('ans')&&o.answer!=null)r.ans=o.answer;
+  if(blank('exp')&&o.explanation!=null)r.exp=o.explanation;
+  if(blank('cat')&&o.category!=null)r.cat=o.category;
+  ['q','ans','exp','year','src','cat'].forEach(function(k){r[k]=(r[k]==null)?'':String(r[k])});
+  r.no=(r.no==null)?'':String(r.no);
+  r.pend=(o.pend===undefined)?!r.ans.trim():!!o.pend;
+  r.id=r.id?String(r.id):'es-'+hash(r.src+'#'+r.no+'#'+r.q);
+  return r;
+}
+function esiCat(e){return nrm(e.cat)+'|'+String(e.no==null?'':e.no).trim()}
+function esiKey(e){return esiCat(e)+'|'+nrm(e.q)}
+/* 格式辨識：回傳 {arr,fmt} 或 {err} */
+function esiDetect(j){
+  var arr,fmt;
+  if(Array.isArray(j)){
+    arr=j;fmt='純清單';
+    var mc=arr.filter(function(x){return isObj(x)&&Array.isArray(x.opts||x.options||x.choices)}).length;
+    if(arr.length&&mc*2>arr.length)return {err:'這份檔案有「選項」欄位，看起來是選擇題，不是申論題。請到「題庫」頁匯入。申論題沒有改變。'};
+  }else if(isObj(j)){
+    if(j.format==='exam-bank-backup')return {err:'這是完整備份，不是申論題檔。完整備份請到「題庫」頁的「備份與還原」處理。申論題沒有改變。'};
+    if(j.format==='exam-bank-images')return {err:'這是圖片包，不是申論題檔。圖片包請到「題庫」頁的「圖片（附圖）」匯入。申論題沒有改變。'};
+    if(Array.isArray(j.essays)){arr=j.essays;fmt=j.format==='exam-bank-essays'?'原始格式（exam-bank-essays）':'含 essays 清單'}
+    else return {err:'找不到申論題清單（需要是題目清單，或含 essays 清單的檔案）。申論題沒有改變。'};
+  }else return {err:'內容不是題目清單。申論題沒有改變。'};
+  if(!arr.length)return {err:'檔案裡沒有題目（0 題）。申論題沒有改變。'};
+  return {arr:arr,fmt:fmt,extra:isObj(j)&&(j.answers||j.marks||j.exams)?true:false};
+}
+/* 比對現有題庫，分類每一題；picks 為「需確認」題的勾選 */
+function esiPlan(arr,picks){
+  var E=S.essays||[],byKey={},byCat={},qset={},taken={};
+  E.forEach(function(e){
+    taken[e.id]=1;byKey[esiKey(e)]=1;qset[nrm(e.q)]=1;
+    var c=esiCat(e);if(String(e.no==null?'':e.no).trim()!==''){(byCat[c]=byCat[c]||[]).push(e.q)}
+  });
+  var items=[],seen={},sim=0;
+  arr.forEach(function(raw,i){
+    var it={i:i,st:'new',why:[],warn:[]};items.push(it);
+    if(!isObj(raw)){it.st='err';it.why.push('不是題目物件');return}
+    var r=esiNorm(raw);
+    if(!String(r.q).trim()){it.st='err';it.why.push('缺少題目文字');return}
+    it.r=r;
+    if(!r.cat.trim())it.warn.push('缺少考卷分類（會歸入「未歸屬考卷」，不會自動推測）');
+    if(!r.no.trim())it.warn.push('缺少題號');
+    if(!r.ans.trim())it.warn.push('沒有參考答案（會標為答案待確認）');
+    var k=esiKey(r);
+    if(byKey[k]){it.st='dup';it.why.push(seen[k]?'檔案內重複（考卷、題號、題幹相同）':'已有相同考卷、題號、題幹的題目');return}
+    var c=esiCat(r);
+    if(r.no.trim()!==''&&byCat[c]&&byCat[c].length){it.st='confirm';it.why.push('同考卷同題號，但題幹不同');it.cur=byCat[c][0];it.picked=!!(picks&&picks[i])}
+    else if(qset[nrm(r.q)])sim++;
+    byKey[k]=1;seen[k]=1;qset[nrm(r.q)]=1;
+    if(r.no.trim()!==''){(byCat[c]=byCat[c]||[]).push(r.q)}
+  });
+  var n={read:arr.length,add:0,dup:0,err:0,confirm:0,pick:0,warn:0,sim:sim};
+  items.forEach(function(it){
+    if(it.st==='err')n.err++;else if(it.st==='dup')n.dup++;
+    else{if(it.st==='confirm'){n.confirm++;if(it.picked)n.pick++}if(it.st==='new'||it.picked)n.add++}
+    if(it.st!=='err'&&it.warn.length)n.warn++;
+  });
+  return {items:items,n:n};
+}
+/* 指派不衝突的 id；已被使用的 id（含檔案自帶的 id）一律改寫，既有題目的 id、圖片連結不動 */
+function esiBuild(plan){
+  var taken={};(S.essays||[]).forEach(function(e){taken[e.id]=1});
+  var out=[],ids=[],changed=0;
+  plan.items.forEach(function(it){
+    if(!(it.st==='new'||(it.st==='confirm'&&it.picked)))return;
+    var r=Object.assign({},it.r),id=r.id;
+    if(taken[id]){
+      var base='es-'+hash(r.cat+'#'+r.src+'#'+r.no+'#'+r.q),n=1;id=base;
+      while(taken[id]){n++;id=base+'-'+n}
+      changed++;
+    }
+    r.id=id;taken[id]=1;out.push(r);ids.push(id);
+  });
+  return {recs:out,ids:ids,changed:changed};
+}
+function esiClone(x){return JSON.parse(JSON.stringify(x))}
+function esiStrip(raw){try{var o=JSON.parse(raw);delete o.essays;return JSON.stringify(o)}catch(e){return null}}
+function esiSaveVerify(){
+  var ok=save();if(!ok)return false;
+  return LS.get(KEY)===JSON.stringify(S);
+}
+/* ---- 匯入 ---- */
+function esiParse(text,label){
+  text=String(text||'').trim();
+  if(!text){esI=Object.assign(esI||{},{open:true,stage:'pick',err:'沒有內容。請選擇 JSON 檔案，或貼上 JSON 文字。'});render();return}
+  var j;try{j=JSON.parse(text)}catch(e){esI=Object.assign(esI||{},{open:true,stage:'pick',err:'JSON 格式錯誤（可能複製不完整）：'+e.message+'。申論題沒有改變。'});render();return}
+  var d=esiDetect(j);
+  if(d.err){esI=Object.assign(esI||{},{open:true,stage:'pick',err:d.err});render();return}
+  esI={open:true,stage:'preview',name:label,fmt:d.fmt,arr:d.arr,extra:d.extra,picks:{},all:{},err:'',paste:(esI&&esI.paste)||''};
+  render();window.scrollTo(0,0);
+}
+function esiRun(){
+  var I=esI;if(!I||I.stage!=='preview')return;
+  if(loadErr){I.err='主資料讀取失敗，為了保護資料，不能匯入。';render();return}
+  var plan=esiPlan(I.arr,I.picks),b=esiBuild(plan);
+  if(!b.recs.length){I.err='沒有可以匯入的題目。';render();return}
+  var E0=S.essays||[],preJSON=JSON.stringify(E0),pre=JSON.parse(preJSON),preRaw=LS.get(KEY);
+  var rec={ver:1,st:'pending',at:Date.now(),label:I.name||'',pre:pre,added:b.ids};
+  if(!esiPut(rec)){esiDrop();I.err='無法保存匯入前的申論題原始資料（儲存空間可能不足）。尚未改動任何資料。';render();return}
+  S.essays=E0.concat(b.recs);
+  var ok=esiSaveVerify(),raw=LS.get(KEY),good=ok;
+  if(good){
+    try{
+      var o=JSON.parse(raw);
+      good=Array.isArray(o.essays)&&o.essays.length===pre.length+b.recs.length
+        &&JSON.stringify(o.essays.slice(0,pre.length))===preJSON
+        &&JSON.stringify(o.essays.slice(pre.length).map(function(e){return e.id}))===JSON.stringify(b.ids)
+        &&(preRaw==null||esiStrip(preRaw)===esiStrip(raw));
+    }catch(e){good=false}
+  }
+  if(!good){
+    /* 回復：先用匯入前的完整原文，再退一步用保存的申論題原始資料 */
+    S.essays=JSON.parse(preJSON);
+    var rb=false,cur=LS.get(KEY);
+    try{
+      if(preRaw!=null?cur===preRaw:cur==null)rb=true;           /* 根本沒寫進去，原文還在 */
+      else if(preRaw!=null){rb=LS.set(KEY,preRaw)&&LS.get(KEY)===preRaw}
+      else{localStorage.removeItem(KEY);rb=LS.get(KEY)==null}
+    }catch(e){rb=false}
+    if(rb){esiDrop();esI=null;esiMsg('匯入失敗，已回復到匯入前（申論題 '+pre.length+' 題），沒有新增任何題目。')}
+    else{
+      rec.st='failed';esiPut(rec);
+      esI=null;esiMsg('匯入失敗，而且自動回復也沒有成功。匯入前的申論題原始資料（'+pre.length+' 題）仍保存著，請在下方按「回復到匯入前」。在回復之前，請不要新增或編輯申論題。');
+    }
+    render();return;
+  }
+  var done={ver:1,st:'done',at:Date.now(),label:I.name||'',pre:null,added:b.ids,n:{add:b.recs.length}};
+  var fin=esiPut(done);
+  var cnt=plan.n;
+  esfY='';esfS='';esEx='';esQ='';esShow=200;
+  I.stage='done';I.rep={add:b.recs.length,dup:cnt.dup,err:cnt.err,skipConfirm:cnt.confirm-cnt.pick,changed:b.changed,total:S.essays.length,fin:fin};
+  render();window.scrollTo(0,0);
+}
+var esiNote='';
+function esiMsg(t){esiNote=t}
+/* ---- 復原本次匯入 ---- */
+function esiUndo(){
+  var rec=esiRec();if(!rec||rec.st!=='done')return;
+  var set={};rec.added.forEach(function(id){set[id]=1});
+  var E=S.essays||[],here=E.filter(function(e){return set[e.id]});
+  if(!here.length){esiDrop();esiMsg('找不到本次匯入的題目（可能已刪除或還原過其他備份），已清除這筆復原紀錄。');render();return}
+  var ans=0,mk=0,img=0;
+  here.forEach(function(e){
+    if(S.eans&&S.eans[e.id])ans++;
+    if(S.emark&&S.emark[e.id])mk++;
+    var l=IM&&IM.links&&IM.links[e.id];if(l&&((l.q&&l.q.length)||(l.a&&l.a.length)))img++;
+  });
+  if(ans||mk||img){
+    esiMsg('不能復原：本次新增的題目中，'+[ans?ans+' 題已有作答紀錄':'',mk?mk+' 題已有自評紀錄':'',img?img+' 題已附圖片':''].filter(Boolean).join('、')+'。為了不弄丟這些資料，已拒絕復原，沒有改動任何資料。可以逐題刪除不要的題目。');render();return;
+  }
+  if(loadErr){esiMsg('主資料讀取失敗，不能復原。');render();return}
+  var before=S.essays,beforeRaw=LS.get(KEY);
+  S.essays=E.filter(function(e){return !set[e.id]});
+  var ok=esiSaveVerify(),good=ok;
+  if(good){try{good=JSON.stringify(JSON.parse(LS.get(KEY)).essays)===JSON.stringify(S.essays)&&(beforeRaw==null||esiStrip(beforeRaw)===esiStrip(LS.get(KEY)))}catch(e){good=false}}
+  if(!good){
+    S.essays=before;var rb=false;
+    try{
+      if(beforeRaw==null||LS.get(KEY)===beforeRaw)rb=true;
+      else rb=LS.set(KEY,beforeRaw)&&LS.get(KEY)===beforeRaw;
+    }catch(e){rb=false}
+    esiMsg(rb?'復原失敗，資料已維持在復原前的狀態，沒有任何題目被移除。':'復原失敗，而且無法確認資料狀態。請不要繼續操作，立刻到「題庫」頁複製完整備份保存，再重新整理頁面確認申論題數量。');
+    render();return;
+  }
+  esiDrop();esiMsg('已復原本次匯入，移除 '+here.length+' 題。其他資料沒有改變。');render();
+}
+/* ---- 未完成的匯入：回復到匯入前 ---- */
+function esiRecover(){
+  var rec=esiRec();if(!rec||!Array.isArray(rec.pre))return;
+  if(loadErr){esiMsg('主資料讀取失敗，不能回復。');render();return}
+  var before=S.essays;
+  S.essays=JSON.parse(JSON.stringify(rec.pre));
+  var ok=esiSaveVerify();
+  if(!ok){S.essays=before;esiMsg('回復失敗，原始資料仍保存著。請稍後再試，或先釋放瀏覽器儲存空間。');render();return}
+  esiDrop();esiMsg('已回復到匯入前（申論題 '+rec.pre.length+' 題）。');render();
+}
+/* 開啟頁面時：若上次匯入其實已完成（只差最後一步紀錄），補完紀錄；否則提醒回復 */
+function esiCheck(){
+  var rec=esiRec();if(!rec||rec.st!=='pending')return;
+  var have={};(S.essays||[]).forEach(function(e){have[e.id]=1});
+  var all=rec.added.length&&rec.added.every(function(id){return have[id]});
+  if(all&&Array.isArray(rec.pre)&&S.essays.length===rec.pre.length+rec.added.length){
+    esiPut({ver:1,st:'done',at:rec.at,label:rec.label,pre:null,added:rec.added,n:{add:rec.added.length}});
+  }
+}
+/* ---- 畫面 ---- */
+function esiBand(a,b,c,d){
+  return '<div class="esband">'+[a,b,c,d].map(function(x){return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'}).join('')+'</div>';
+}
+function esiList(I,plan,key,label,test,line,open){
+  var L=plan.items.filter(test);if(!L.length)return '';
+  var all=I.all&&I.all[key],show=all?L:L.slice(0,20);
+  return '<details'+(open?' open':'')+'><summary>'+label+'（'+L.length+'）</summary><div class="stack" style="gap:8px">'
+    +show.map(line).join('')
+    +(L.length>show.length?'<button class="btn sm" data-act="esi-all" data-k="'+key+'" style="align-self:flex-start">顯示全部 '+L.length+' 筆</button>':'')
+    +'</div></details>';
+}
+function esiLoc(it){
+  var r=it.r||{};
+  return '檔內第 '+(it.i+1)+' 題'+(r.no?'・第 '+esc(r.no)+' 題':'')+(r.cat?'・'+esc(r.cat):'');
+}
+function esiHTML(){
+  var I=esI,h='<section class="card stack" style="gap:12px"><h2>匯入申論題</h2>';
+  if(I.stage==='done'){
+    var R=I.rep;
+    h+='<p class="sub" style="margin:0">匯入完成。這次只新增題目，沒有取代或覆蓋任何現有申論題。</p>'
+      +esiBand([R.add,'實際新增'],[R.dup,'略過（重複）'],[R.skipConfirm,'需確認未加入'],[R.err,'格式錯誤'])
+      +'<p class="msg">匯入後申論題共 '+R.total+' 題。'+'<p class="msg" style="color:var(--good)">成功新增 '+R.add+' 題，篩選條件已重設。</p>'
+      +(R.changed?'有 '+R.changed+' 題的 id 與現有題目衝突，已自動改用新 id。':'')+'</p>'
+      +(R.fin?'':'<p class="msg" style="color:var(--bad)">復原紀錄沒有寫成功，這次匯入可能無法用「復原本次匯入」處理。</p>')
+      +'<button class="btn primary" data-act="esi-close" style="justify-content:center">完成</button></section>';
+    return h;
+  }
+  if(I.stage==='pick'){
+    h+='<p class="sub" style="margin:0">支援「申論題清單 JSON」與「申論題備份格式」，會自動辨識。匯入只會新增題目，不會取代或覆蓋現有題目；匯入前會先保存原始資料，可以復原。</p>'
+      +(I.err?'<div class="note" style="background:var(--bad-bg);color:var(--bad)">'+esc(I.err)+'</div>':'')
+      +'<input type="file" id="esif" class="vh" accept=".json,.txt,application/json,text/plain"><label class="btn primary" for="esif" style="justify-content:center">選擇 JSON 檔案</label>'
+      +'<div class="setrow"><label for="esip">或貼上 JSON 文字</label><textarea id="esip" placeholder="把申論題 JSON 貼在這裡" style="min-height:110px">'+esc(I.paste||'')+'</textarea></div>'
+      +'<button class="btn" data-act="esi-readpaste" style="justify-content:center">讀取貼上的內容</button>'
+      +'<button class="btn sm" data-act="esi-close" style="align-self:flex-start">取消</button></section>';
+    return h;
+  }
+  var plan=esiPlan(I.arr,I.picks),n=plan.n;
+  h+='<p class="sub" style="margin:0">'+esc(I.name||'')+'・格式：'+esc(I.fmt)+'</p>'
+    +esiBand([n.read,'讀取題數'],[n.add,'可新增'],[n.dup,'疑似重複'],[n.err,'格式錯誤'])
+    +(n.confirm?'<p class="msg" style="color:var(--bad)">需確認 '+n.confirm+' 題（同考卷同題號但題幹不同），預設不加入；已勾選 '+n.pick+' 題。</p>':'')
+    +(n.warn?'<p class="msg">需留意 '+n.warn+' 題（缺少考卷分類、題號或參考答案，仍可匯入）。</p>':'')
+    +(n.sim?'<p class="msg">另有 '+n.sim+' 題題幹與現有題目相同，但考卷或題號不同，視為不同題，會新增。</p>':'')
+    +(I.extra?'<p class="msg">檔案內的作答、自評、考卷資料不會匯入。</p>':'')
+    +(I.err?'<div class="note" style="background:var(--bad-bg);color:var(--bad)">'+esc(I.err)+'</div>':'');
+  h+=esiList(I,plan,'err','格式錯誤',function(it){return it.st==='err'},function(it){return '<p class="msg" style="margin:0">檔內第 '+(it.i+1)+' 題：'+esc(it.why.join('、'))+'</p>'},n.err>0);
+  h+=esiList(I,plan,'confirm','需確認：可逐題勾選',function(it){return it.st==='confirm'},function(it){
+    return '<div class="card stack" style="gap:6px;padding:12px"><p class="msg" style="margin:0">'+esiLoc(it)+'</p>'
+      +'<p class="msg" style="margin:0"><b>檔案中：</b>'+esc(esiTxt(it.r.q,60))+'</p>'
+      +'<p class="msg" style="margin:0"><b>現有題目：</b>'+esc(esiTxt(it.cur,60))+'</p>'
+      +'<label class="chk"><input type="checkbox" data-act="esi-pick" data-i="'+it.i+'"'+(it.picked?' checked':'')+'>仍要加入這一題</label></div>';
+  },n.confirm>0);
+  h+=esiList(I,plan,'dup','疑似重複（不會加入）',function(it){return it.st==='dup'},function(it){return '<p class="msg" style="margin:0">'+esiLoc(it)+'：'+esc(it.why.join('、'))+'<br>'+esc(esiTxt(it.r.q,50))+'</p>'},false);
+  h+=esiList(I,plan,'warn','需留意（仍可匯入）',function(it){return it.warn.length&&it.st!=='err'},function(it){return '<p class="msg" style="margin:0">'+esiLoc(it)+'：'+esc(it.warn.join('；'))+'</p>'},false);
+  h+='<button class="btn primary" data-act="esi-run" style="justify-content:center"'+(n.add?'':' disabled')+'><span id="esirun">確認匯入 '+n.add+' 題</span></button>'
+    +'<button class="btn sm" data-act="esi-close" style="align-self:flex-start">取消</button></section>';
+  return h;
+}
+/* 申論題頁上方的提醒卡：未完成的匯入、可復原的上次匯入 */
+function esiCards(){
+  var h='';
+  if(esiNote){h+='<div class="note">'+esc(esiNote)+'</div>';esiNote=''}
+  var rec=esiRec();
+  if(rec&&(rec.st==='pending'||rec.st==='failed')&&Array.isArray(rec.pre)){
+    h+='<section class="card stack" style="gap:10px;border-color:var(--bad)"><h2>上次匯入沒有完成</h2>'
+      +'<p class="msg" style="margin:0">匯入前的申論題原始資料（'+rec.pre.length+' 題）仍保存著。按下去會把申論題回復成匯入前的樣子（其他資料不動）；回復前如果又新增了題目，會一併消失。</p>'
+      +'<button class="btn warn" data-act="esi-recover" style="justify-content:center">回復到匯入前</button></section>';
+  }else if(rec&&rec.st==='done'&&rec.added.length){
+    h+='<section class="card stack" style="gap:8px"><h2>上次匯入</h2>'
+      +'<p class="msg" style="margin:0">'+esc(new Date(rec.at).toLocaleString('zh-TW'))+'・'+esc(rec.label||'')+'・新增 '+rec.added.length+' 題。若這些題目已有作答、自評或附圖，就不能復原。</p>'
+      +'<button class="btn sm" data-act="esi-undo" style="align-self:flex-start">復原本次匯入</button></section>';
+  }
+  return h;
+}
+function esiAct(a,b){
+  if(a==='esi-open'){esI={open:true,stage:'pick',err:'',paste:''};render();window.scrollTo(0,0)}
+  else if(a==='esi-close'){esI=null;render();window.scrollTo(0,0)}
+  else if(a==='esi-readpaste'){var t=$('#esip');var v=t?t.value:((esI&&esI.paste)||'');if(esI)esI.paste=v;esiParse(v,'貼上的文字')}
+  else if(a==='esi-all'){if(esI){esI.all=esI.all||{};esI.all[b.dataset.k]=true;render()}}
+  else if(a==='esi-pick'){
+    if(!esI)return;var i=+b.dataset.i;esI.picks[i]=b.checked;
+    var n=esiPlan(esI.arr,esI.picks).n,s=$('#esirun');if(s)s.textContent='確認匯入 '+n.add+' 題';
+    var btn=s&&s.closest('button');if(btn)btn.disabled=!n.add;
+  }
+  else if(a==='esi-run')esiRun();
+  else if(a==='esi-undo')twice(b,'esiundo',esiUndo);
+  else if(a==='esi-recover')twice(b,'esirecover',esiRecover);
+}
+document.addEventListener('change',function(e){
+  var t=e.target;
+  if(t&&t.id==='esif'&&t.files&&t.files[0]){
+    var f=t.files[0],fr=new FileReader();
+    fr.onload=function(){esiParse(fr.result,f.name)};
+    fr.onerror=function(){esI=Object.assign(esI||{},{open:true,stage:'pick',err:'無法讀取檔案，請重新選擇。'});render()};
+    fr.readAsText(f);t.value='';
+  }
+});
+document.addEventListener('input',function(e){var t=e.target;if(t&&t.id==='esip'&&esI)esI.paste=t.value});
+
+
+/* ---------- 附圖（圖片）支援 ----------
+   圖片存在獨立的儲存區 examBank.img.v1，不改動題庫、申論題與其他資料。
+   連結以題目 id 為鍵：links[題目id]={q:[圖id…],a:[圖id…]}；q＝題目下方，a＝詳解／參考答案下方。 */
+var IKEY='examBank.img.v1',IM={ver:1,imgs:{},links:{},last:null},imBad='',imMsg='',imPrev=null,imOpen=false;
+function imEmpty(){return {ver:1,imgs:{},links:{},last:null}}
+function imValid(o){
+  if(!isObj(o)||o.ver!==1||!isObj(o.imgs)||!isObj(o.links))return false;
+  var ok=true;
+  Object.keys(o.imgs).forEach(function(k){var m=o.imgs[k];if(!isObj(m)||typeof m.d!=='string'||typeof m.m!=='string')ok=false});
+  Object.keys(o.links).forEach(function(k){var l=o.links[k];if(!isObj(l)||(l.q!=null&&!Array.isArray(l.q))||(l.a!=null&&!Array.isArray(l.a)))ok=false});
+  return ok;
+}
+function imLoad(){
+  imBad='';var raw=LS.get(IKEY);
+  if(raw==null||raw===''){IM=imEmpty();return}
+  try{var o=JSON.parse(raw);if(!imValid(o))throw new Error('bad');IM=o;if(!('last' in IM))IM.last=null}
+  catch(e){IM=imEmpty();imBad='圖片資料讀取失敗，圖片暫時不顯示。題目、答案與詳解不受影響。可到「題庫」頁的「圖片」重設，或從備份還原。'}
+}
+function imSaveRaw(v){if(!LS.set(IKEY,v))return false;return LS.get(IKEY)===v}
+function imIds(qid,pos){var l=IM.links[qid];return (l&&Array.isArray(l[pos]))?l[pos].filter(function(id){return IM.imgs[id]}):[]}
+function imgsHTML(qid,pos){
+  if(imBad||!qid)return '';
+  var ids=imIds(qid,pos);if(!ids.length)return '';
+  return '<div class="qimgs">'+ids.map(function(id,i){var m=IM.imgs[id];
+    return '<button class="qimg" data-act="img-open" data-q="'+esc(qid)+'" data-p="'+pos+'" data-i="'+i+'" aria-label="放大附圖 '+(i+1)+'"><img class="qi" alt="附圖 '+(i+1)+'" loading="lazy" src="data:'+esc(m.m)+';base64,'+esc(m.d)+'"></button>'}).join('')+'</div>';
+}
+/* 詳解／參考答案區塊：文字在上、圖片在下；沒有文字但有圖時仍顯示。 */
+function expBlock(title,textHTML,qid){
+  var im=imgsHTML(qid,'a');
+  if(!textHTML&&!im)return '';
+  return '<div class="exp"><b>'+title+'</b>'+textHTML+im+'</div>';
+}
+document.addEventListener('error',function(e){
+  var t=e.target;
+  if(t&&t.tagName==='IMG'&&t.classList&&t.classList.contains('qi')){
+    var p=t.parentNode;
+    if(p){p.classList.add('bad');p.removeAttribute('data-act');p.textContent='（這張圖片無法顯示）'}
+  }
+},true);
+
+/* ---- 放大檢視：點擊開啟、雙指縮放、拖曳、雙擊切換、滾輪（桌機）---- */
+var iv=null;
+function ivOpen(qid,pos,i){
+  var ids=imIds(qid,pos);if(!ids.length)return;
+  iv={ids:ids,i:Math.min(Math.max(0,i|0),ids.length-1),s:1,x:0,y:0,ptr:{},lastTap:0,d0:0,s0:1,mx:0,my:0};
+  var d=document.getElementById('imgv');if(d)d.remove();
+  d=document.createElement('div');d.id='imgv';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+  d.innerHTML='<div class="ivbar"><span id="ivcnt"></span><button data-act="img-close">關閉 ✕</button></div>'
+    +'<div id="ivstage"><img id="ivimg" alt="附圖" draggable="false"></div>'
+    +'<div class="ivfoot"><button data-act="img-prev" id="ivprev">‹ 上一張</button><span>雙指縮放・雙擊放大</span><button data-act="img-next" id="ivnext">下一張 ›</button></div>';
+  document.body.appendChild(d);document.body.style.overflow='hidden';
+  ivShow();ivBind(d.querySelector('#ivstage'));
+}
+function ivClose(){var d=document.getElementById('imgv');if(d)d.remove();document.body.style.overflow='';iv=null}
+function ivShow(){
+  if(!iv)return;var m=IM.imgs[iv.ids[iv.i]],im=document.getElementById('ivimg');
+  iv.s=1;iv.x=0;iv.y=0;
+  if(im){if(m){im.onerror=function(){im.removeAttribute('src');im.alt='（這張圖片無法顯示）'};im.src='data:'+m.m+';base64,'+m.d}ivApply()}
+  var c=document.getElementById('ivcnt');if(c)c.textContent='附圖 '+(iv.i+1)+' / '+iv.ids.length;
+  var p=document.getElementById('ivprev'),n=document.getElementById('ivnext');
+  if(p)p.style.visibility=iv.ids.length>1?'visible':'hidden';if(n)n.style.visibility=iv.ids.length>1?'visible':'hidden';
+}
+function ivApply(){
+  var im=document.getElementById('ivimg'),st=document.getElementById('ivstage');if(!im||!iv)return;
+  if(iv.s<=1.001){iv.s=1;iv.x=0;iv.y=0}
+  else if(st){var mx=(iv.s-1)*st.clientWidth/2+40,my=(iv.s-1)*st.clientHeight/2+40;iv.x=Math.max(-mx,Math.min(mx,iv.x));iv.y=Math.max(-my,Math.min(my,iv.y))}
+  im.style.transform='translate('+iv.x+'px,'+iv.y+'px) scale('+iv.s+')';
+}
+function ivDist(){var k=Object.keys(iv.ptr);if(k.length<2)return 0;var a=iv.ptr[k[0]],b=iv.ptr[k[1]];return Math.hypot(a.x-b.x,a.y-b.y)}
+function ivMid(){var k=Object.keys(iv.ptr),a=iv.ptr[k[0]],b=iv.ptr[k[1]];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2}}
+function ivBind(st){
+  st.addEventListener('pointerdown',function(e){
+    if(!iv)return;try{st.setPointerCapture(e.pointerId)}catch(x){}
+    iv.ptr[e.pointerId]={x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t:Date.now()};
+    if(Object.keys(iv.ptr).length===2){iv.d0=ivDist();iv.s0=iv.s;var m=ivMid();iv.mx=m.x;iv.my=m.y}
+  });
+  st.addEventListener('pointermove',function(e){
+    if(!iv||!iv.ptr[e.pointerId])return;
+    var p=iv.ptr[e.pointerId],dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+    var n=Object.keys(iv.ptr).length;
+    if(n>=2){
+      var d=ivDist();if(iv.d0>0){iv.s=Math.max(1,Math.min(6,iv.s0*d/iv.d0))}
+      var m=ivMid();iv.x+=m.x-iv.mx;iv.y+=m.y-iv.my;iv.mx=m.x;iv.my=m.y;ivApply();
+    }else if(iv.s>1){iv.x+=dx;iv.y+=dy;ivApply()}
+  });
+  var up=function(e){
+    if(!iv||!iv.ptr[e.pointerId])return;
+    var p=iv.ptr[e.pointerId],n=Object.keys(iv.ptr).length;
+    var moved=Math.hypot(e.clientX-p.x0,e.clientY-p.y0);
+    delete iv.ptr[e.pointerId];
+    if(n===1&&moved<10&&Date.now()-p.t<350){
+      var now=Date.now();
+      if(now-iv.lastTap<320){iv.lastTap=0;if(iv.s>1){iv.s=1;iv.x=0;iv.y=0}else{iv.s=2.5}ivApply()}
+      else iv.lastTap=now;
+    }
+    if(Object.keys(iv.ptr).length===1){var k=Object.keys(iv.ptr)[0];iv.ptr[k].x0=iv.ptr[k].x;iv.ptr[k].y0=iv.ptr[k].y}
+  };
+  st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);
+  st.addEventListener('wheel',function(e){if(!iv)return;e.preventDefault();iv.s=Math.max(1,Math.min(6,iv.s*Math.exp(-e.deltaY*0.002)));ivApply()},{passive:false});
+}
+document.addEventListener('keydown',function(e){if(iv&&e.key==='Escape')ivClose()});
+
+/* ---- 圖片包：驗證、對應、預覽、加入 ---- */
+function nrm(s){return String(s==null?'':s).replace(/\s+/g,'').toLowerCase()}
+function srcNo(q){var m=/第\s*(\d+)\s*題/.exec(q.src||'');return m?+m[1]:null}
+function imSig(m){return m==='image/png'?'iVBORw0KGgo':m==='image/jpeg'?'/9j/':m==='image/webp'?'UklGR':null}
+function imParsePack(text){
+  var j;try{j=JSON.parse(text)}catch(e){return {err:'這不是有效的 JSON 檔：'+e.message+'。目前的圖片沒有改變。'}}
+  if(!isObj(j)||j.format!=='exam-bank-images')return {err:'這不是 Exam Bank 圖片包。目前的圖片沒有改變。'};
+  if(j.formatVersion!==1)return {err:'圖片包版本（'+j.formatVersion+'）目前版本不支援。目前的圖片沒有改變。'};
+  if(!Array.isArray(j.items))return {err:'圖片包缺少 items。目前的圖片沒有改變。'};
+  return {pack:j};
+}
+function imPlan(pack){
+  var bank=S.bank||[],ess=S.essays||[],byCatB={},byCatE={};
+  bank.forEach(function(q){var c=String(q.cat||'').trim();(byCatB[c]=byCatB[c]||[]).push(q)});
+  ess.forEach(function(e){var c=String(e.cat||'').trim();(byCatE[c]=byCatE[c]||[]).push(e)});
+  var r={total:pack.items.length,ok:[],weak:[],same:0,corrupt:[],unmatched:[],qset:{},source:pack.source||'',newKB:0};
+  var items=pack.items.slice().sort(function(a,b){return (a.ord||0)-(b.ord||0)});
+  items.forEach(function(it){
+    var label=String(it.cat||'?')+'　'+(it.type==='essay'?'問答題':'選擇題')+' 第 '+it.no+' 題（'+(it.pos==='q'?'題目圖':'詳解圖')+'）';
+    if(!isObj(it)||typeof it.cat!=='string'||(it.type!=='mcq'&&it.type!=='essay')||(it.pos!=='q'&&it.pos!=='a')||typeof it.data!=='string'||typeof it.dsha!=='string'){r.corrupt.push({label:label,why:'欄位不完整'});return}
+    var sig=imSig(it.mime);
+    if(!sig||it.data.indexOf(sig)!==0||!/^[A-Za-z0-9+\/=]+$/.test(it.data)||it.data.length>2000000){r.corrupt.push({label:label,why:'圖片內容格式不正確'});return}
+    if(sha256(it.data)!==it.dsha){r.corrupt.push({label:label,why:'圖片檢查碼不符（檔案可能被修改或截斷）'});return}
+    var cat=it.cat.trim(),cands=(it.type==='essay'?byCatE[cat]:byCatB[cat])||[],noOf=function(x){return it.type==='essay'?(String(x.no||'').trim()===''?null:+x.no):srcNo(x)};
+    var strong=cands.filter(function(x){return hash(nrm(x.q))===it.fp}),hit=null,kind='';
+    if(strong.length===1){hit=strong[0];kind='ok'}
+    else if(strong.length>1){var t=strong.filter(function(x){return noOf(x)===it.no});if(t.length===1){hit=t[0];kind='ok'}}
+    if(!hit&&!strong.length){
+      var w=cands.filter(function(x){return noOf(x)===it.no&&it.sp&&nrm(x.q).indexOf(it.sp)===0});
+      if(w.length===1){hit=w[0];kind='weak'}
+    }
+    if(!hit){
+      r.unmatched.push({label:label,why:!cands.length?'題庫裡找不到這份考卷（'+cat+'）的'+(it.type==='essay'?'問答題':'選擇題'):(strong.length>1?'同一份考卷內有多題題幹相同，無法確定是哪一題':'這份考卷有 '+cands.length+' 題，但題幹與題號都對不上')});
+      return;
+    }
+    var id='i'+it.dsha.slice(0,16),l=IM.links[hit.id],has=l&&Array.isArray(l[it.pos])&&l[it.pos].indexOf(id)>=0;
+    if(has){r.same++;return}
+    var rec={qid:hit.id,pos:it.pos,id:id,it:it,label:label,kind:kind};
+    (kind==='weak'?r.weak:r.ok).push(rec);r.qset[hit.id]=1;
+  });
+  var seen={};r.ok.concat(r.weak).forEach(function(x){if(!IM.imgs[x.id]&&!seen[x.id]){seen[x.id]=1;r.newKB+=x.it.data.length/1024}});
+  return r;
+}
+function imApply(plan){
+  var oldRaw=LS.get(IKEY),old=IM,next=JSON.parse(JSON.stringify(IM)),added=[],newImgs=[];
+  plan.ok.concat(plan.weak).forEach(function(x){
+    if(!next.imgs[x.id]){next.imgs[x.id]={m:x.it.mime,w:x.it.w|0,h:x.it.h|0,d:x.it.data};newImgs.push(x.id)}
+    var l=next.links[x.qid]=next.links[x.qid]||{};l[x.pos]=l[x.pos]||[];
+    if(l[x.pos].indexOf(x.id)<0){l[x.pos].push(x.id);added.push([x.qid,x.pos,x.id])}
+  });
+  next.last={at:Date.now(),added:added,newImgs:newImgs};
+  IM=next;
+  if(!imSaveRaw(JSON.stringify(IM))){
+    IM=old;
+    try{if(oldRaw==null)localStorage.removeItem(IKEY);else LS.set(IKEY,oldRaw)}catch(e){}
+    imMsg='儲存空間不足，圖片沒有加入，原有資料沒有改變。可先刪除不需要的圖片或備份後再試。';imPrev=null;render();return;
+  }
+  imMsg='已加入 '+added.length+' 張圖片（新增儲存 '+newImgs.length+' 張），涵蓋 '+Object.keys(plan.qset).length+' 題。題目、答案與詳解文字沒有被改動。';imPrev=null;render();window.scrollTo(0,0);
+}
+function imUndo(){
+  if(!IM.last)return;
+  var oldRaw=LS.get(IKEY),old=IM,next=JSON.parse(JSON.stringify(IM));
+  IM.last.added.forEach(function(a){var l=next.links[a[0]];if(l&&Array.isArray(l[a[1]])){l[a[1]]=l[a[1]].filter(function(x){return x!==a[2]});if(!l.q&&!l.a||(!(l.q||[]).length&&!(l.a||[]).length))delete next.links[a[0]]}});
+  var ref={};Object.keys(next.links).forEach(function(k){['q','a'].forEach(function(p){(next.links[k][p]||[]).forEach(function(id){ref[id]=1})})});
+  IM.last.newImgs.forEach(function(id){if(!ref[id])delete next.imgs[id]});
+  next.last=null;IM=next;
+  if(!imSaveRaw(JSON.stringify(IM))){IM=old;try{LS.set(IKEY,oldRaw)}catch(e){}imMsg='復原失敗，圖片沒有改變。';render();return}
+  imMsg='已復原上次的圖片匯入。';render();
+}
+function imOrphans(){
+  var ids={};(S.bank||[]).forEach(function(q){ids[q.id]=1});(S.essays||[]).forEach(function(e){ids[e.id]=1});
+  return Object.keys(IM.links).filter(function(k){return !ids[k]});
+}
+function imCleanOrphans(){
+  var o=imOrphans();if(!o.length)return;
+  var oldRaw=LS.get(IKEY),old=IM,next=JSON.parse(JSON.stringify(IM));
+  o.forEach(function(k){delete next.links[k]});
+  var ref={};Object.keys(next.links).forEach(function(k){['q','a'].forEach(function(p){(next.links[k][p]||[]).forEach(function(id){ref[id]=1})})});
+  Object.keys(next.imgs).forEach(function(id){if(!ref[id])delete next.imgs[id]});
+  next.last=null;IM=next;
+  if(!imSaveRaw(JSON.stringify(IM))){IM=old;try{LS.set(IKEY,oldRaw)}catch(e){}imMsg='清理失敗，圖片沒有改變。';render();return}
+  imMsg='已清理 '+o.length+' 筆找不到題目的圖片連結。';render();
+}
+function imClearAll(){
+  var oldRaw=LS.get(IKEY);
+  try{localStorage.removeItem(IKEY)}catch(e){imMsg='清除失敗。';render();return}
+  IM=imEmpty();imBad='';imPrev=null;imMsg='已清除所有圖片（題目、答案與詳解文字沒有被改動）。';render();
+}
+function imStat(){
+  var n=Object.keys(IM.imgs).length,bytes=0,qs=0;
+  Object.keys(IM.imgs).forEach(function(k){bytes+=IM.imgs[k].d.length});
+  Object.keys(IM.links).forEach(function(k){var l=IM.links[k];if((l.q&&l.q.length)||(l.a&&l.a.length))qs++});
+  return {n:n,bytes:bytes,qs:qs};
+}
+function imgPanelHTML(){
+  var st=imStat(),u=usage();
+  var h='<button class="btn" data-act="im-toggle" aria-expanded="'+imOpen+'"><span>圖片（附圖）</span><small>'+(imBad?'讀取失敗':st.n+' 張')+(imOpen?'　收合 ▲':'　展開 ▼')+'</small></button>';
+  if(imMsg)h+='<div class="note">'+esc(imMsg)+'</div>';
+  if(imBad)h+='<div class="note alert">'+esc(imBad)+(imOpen?'':'')+'</div>';
+  if(!imOpen)return h;
+  h+='<section class="card stack" style="gap:12px"><h2>圖片（附圖）</h2>'
+    +'<p class="msg">目前 '+st.n+' 張圖片，涵蓋 '+st.qs+' 題，圖片約 '+kb(st.bytes)+'。本機儲存空間（約 5 MB 上限）已用約 '+Math.round(u.bytes/5242880*100)+'%。</p>'
+    +'<p class="msg">圖片放在題目下方或詳解／參考答案下方，點一下可放大，手機可雙指縮放。圖片包只會加入圖片，不會改動題目、答案與詳解文字。</p>'
+    +'<div class="setrow"><label for="imfile">選擇圖片包（.json）</label><input type="file" id="imfile" accept=".json,application/json"></div>';
+  if(imPrev)h+=imPreviewHTML(imPrev);
+  if(IM.last)h+='<button class="btn sm" data-act="im-undo" style="align-self:flex-start">復原上次匯入（'+IM.last.added.length+' 張）</button>';
+  var orp=imBad?[]:imOrphans();
+  if(orp.length)h+='<p class="msg">有 '+orp.length+' 筆圖片連結對不到目前的題目（可能題庫已更換）。</p><button class="btn sm" data-act="im-orphan" style="align-self:flex-start">清理這些圖片連結</button>';
+  if(st.n||imBad)h+='<button class="btn sm" data-act="im-clear" style="align-self:flex-start">'+(imBad?'重設圖片資料':'清除所有圖片')+'</button>';
+  return h+'</section>';
+}
+function imPreviewHTML(p){
+  var n=p.plan.ok.length+p.plan.weak.length,h='<div class="card stack" style="gap:8px;border-color:var(--accent)"><h2>匯入預覽</h2>'
+    +'<p class="msg">檔案：'+esc(p.name||'')+(p.plan.source?'（'+esc(p.plan.source)+'）':'')+'</p>'
+    +'<p>檔案內圖片 <b>'+p.plan.total+'</b> 張</p>'
+    +'<p>可對應到題目：<b>'+n+'</b> 張，涵蓋 <b>'+Object.keys(p.plan.qset).length+'</b> 題'+(p.plan.weak.length?'（其中 '+p.plan.weak.length+' 張的題幹與圖片包不同，是依「考卷＋題號」對應）':'')+'</p>'
+    +(p.plan.same?'<p>題目已有這張圖：<b>'+p.plan.same+'</b> 張（略過）</p>':'')
+    +'<p>'+(p.plan.unmatched.length?'<span class="r">無法對應：<b>'+p.plan.unmatched.length+'</b> 張（不會加入）</span>':'無法對應：0 張')+(p.plan.corrupt.length?'；<span class="r">檔案內容有問題：<b>'+p.plan.corrupt.length+'</b> 張（不會加入）</span>':'')+'</p>'
+    +'<p class="msg">預計新增儲存約 '+Math.round(p.plan.newKB)+' KB。</p>';
+  var lst=p.plan.unmatched.map(function(x){return x.label+'：'+x.why}).concat(p.plan.corrupt.map(function(x){return x.label+'：'+x.why}));
+  if(lst.length)h+='<details><summary>無法加入的清單（'+lst.length+'）</summary><div class="msg pre" style="margin-top:6px">'+lst.slice(0,60).map(esc).join('\n')+(lst.length>60?'\n…還有 '+(lst.length-60)+' 筆':'')+'</div></details>';
+  if(p.plan.weak.length)h+='<details><summary>依考卷＋題號對應的圖片（'+p.plan.weak.length+'）</summary><div class="msg pre" style="margin-top:6px">'+p.plan.weak.slice(0,40).map(function(x){return esc(x.label)}).join('\n')+'</div></details>';
+  var tot=usage().bytes+p.plan.newKB*1024;
+  if(tot>3670016)h+='<div class="note alert">加入後本機儲存空間約 '+Math.round(tot/5242880*100)+'%，接近上限。建議先「複製完整備份」並清理不需要的資料。</div>';
+  h+=n?'<button class="btn primary" data-act="im-apply" style="justify-content:center">確認加入 '+n+' 張圖片</button>':'<div class="note">沒有可加入的圖片。</div>';
+  return h+'<button class="btn sm" data-act="im-cancel" style="align-self:flex-start">取消</button></div>';
+}
+function imAct(a,b){
+  if(a==='img-open'){ivOpen(b.dataset.q,b.dataset.p,+b.dataset.i);return}
+  if(a==='img-close'){ivClose();return}
+  if(a==='img-prev'||a==='img-next'){if(iv){iv.i=(iv.i+(a==='img-next'?1:iv.ids.length-1))%iv.ids.length;ivShow()}return}
+  if(a==='im-toggle'){imOpen=!imOpen;render();return}
+  if(a==='im-cancel'){imPrev=null;render();return}
+  if(a==='im-apply'){if(imPrev&&!imBad)imApply(imPrev.plan);return}
+  if(a==='im-undo'){twice(b,'im-undo',imUndo);return}
+  if(a==='im-orphan'){imCleanOrphans();return}
+  if(a==='im-clear'){twice(b,'im-clear',imClearAll);return}
+}
+document.addEventListener('change',function(e){
+  var t=e.target;if(!t||t.id!=='imfile'||!t.files||!t.files[0])return;
+  var f=t.files[0];t.value='';imMsg='';
+  if(imBad){imMsg='圖片資料目前讀取失敗，請先重設圖片資料或從備份還原，再匯入圖片包。';render();return}
+  var rd=new FileReader();
+  rd.onload=function(){
+    var r=imParsePack(String(rd.result||''));
+    if(r.err){imMsg=r.err;imPrev=null;render();return}
+    imPrev={name:f.name,plan:imPlan(r.pack)};imOpen=true;render();
+  };
+  rd.onerror=function(){imMsg='讀取檔案失敗。目前的圖片沒有改變。';render()};
+  rd.readAsText(f);
+});
+
+function hash(s){var h=5381;for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return 'q'+(h>>>0).toString(36)}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+
+/* ---------- parsing ---------- */
+function ansIndex(a,opts){
+  if(typeof a==='number')return Number.isInteger(a)?a-1:-1;
+  var s=String(a==null?'':a).trim(), m;
+  if((m=s.match(/^([A-Ha-h])(?:[.、)）\s]|$)/)))return L.indexOf(m[1].toUpperCase());
+  if(/^\d+$/.test(s))return parseInt(s,10)-1;
+  return opts.indexOf(s);
+}
+function check(o){
+  if(!o||typeof o!=='object'||Array.isArray(o))return {err:'不是題目物件'};
+  var q=String(o.q!=null?o.q:(o.question!=null?o.question:'')).trim();
+  if(!q)return {err:'缺少題目文字'};
+  var opts=o.opts||o.options||o.choices;
+  if(!Array.isArray(opts))return {err:'缺少選項'};
+  opts=opts.map(function(x){return String(x==null?'':x).trim()});
+  if(opts.length<2)return {err:'選項少於 2 個'};
+  if(opts.length>8)return {err:'選項超過 8 個'};
+  if(opts.some(function(x){return !x}))return {err:'選項含空白項目'};
+  var a=o.ans!=null?o.ans:o.answer;
+  if(a==null||String(a).trim()==='')return {err:'缺少答案'};
+  var idx=ansIndex(a,opts);
+  if(!(idx>=0&&idx<opts.length))return {err:'答案無法對應選項'};
+  return {ok:{id:hash(q),uid:(o.id!=null&&String(o.id).trim())?String(o.id).trim():'',q:q,opts:opts,ans:idx,exp:String(o.exp||o.explanation||'').trim(),cat:String(o.cat||o.category||'').trim(),src:String(o.src||'').trim()}};
+}
+function norm(o){return check(o).ok||null}
+function newRes(){return {items:[],skipped:0,errs:{},badIdx:[]}}
+function addOne(res,o,pos){
+  var c=check(o);
+  if(c.ok)res.items.push(c.ok);
+  else{res.skipped++;res.errs[c.err]=(res.errs[c.err]||0)+1;if(res.badIdx.length<10)res.badIdx.push(pos)}
+}
+function parseBlocks(t){
+  var res=newRes(),pos=0;
+  t.split(/\n\s*\n/).forEach(function(blk){
+    var o={opts:[]},last=null;
+    blk.split('\n').forEach(function(line){
+      line=line.trim();if(!line)return;var m;
+      if((m=line.match(/^(?:Q|題目|題)\s*\d*\s*[:：]\s*(.*)$/i))){o.q=m[1];last='q'}
+      else if((m=line.match(/^(?:ANS|答案|解答)\s*[:：]\s*(.*)$/i))){o.ans=m[1];last=null}
+      else if((m=line.match(/^(?:EXP|解析|說明)\s*[:：]\s*(.*)$/i))){o.exp=m[1];last='exp'}
+      else if((m=line.match(/^(?:CAT|分類|類別)\s*[:：]\s*(.*)$/i))){o.cat=m[1];last=null}
+      else if((m=line.match(/^\(?([A-Ha-h])[)）.、:：]\s*(.*)$/))){o.opts.push(m[2]);last='opt'}
+      else if(last==='q')o.q+=' '+line;
+      else if(last==='exp')o.exp+=' '+line;
+      else if(last==='opt')o.opts[o.opts.length-1]+=' '+line;
+    });
+    if(!o.q&&!o.opts.length)return;
+    pos++;addOne(res,o,pos);
+  });
+  return res;
+}
+function parseInput(t){
+  t=String(t).trim();
+  var res=newRes();
+  if(!t)return res;
+  if(t[0]==='['||t[0]==='{'){
+    var j;
+    try{j=JSON.parse(t)}catch(e){res.fatal='JSON 格式錯誤：'+e.message+'。請確認檔案是完整的 JSON 陣列。';return res}
+    var arr=Array.isArray(j)?j:(j&&Array.isArray(j.questions)?j.questions:[j]);
+    arr.forEach(function(o,i){addOne(res,o,i+1)});
+    return res;
+  }
+  return parseBlocks(t);
+}
+function reasonText(r){
+  var k=Object.keys(r.errs||{});
+  if(!k.length)return '';
+  return k.map(function(x){return x+' × '+r.errs[x]}).join('；')+(r.badIdx.length?'（第 '+r.badIdx.join('、')+(r.skipped>r.badIdx.length?' … ':'')+' 題）':'');
+}
+
+/* ---------- sample data ---------- */
+var SAMPLE=[
+['輻射防護中，表示「等價劑量」或「有效劑量」的 SI 單位是？',['戈雷（Gy）','西弗（Sv）','貝克（Bq）','庫侖／公斤（C/kg）'],'B','西弗（Sv）把輻射種類與組織的生物效應納入考量；戈雷是吸收劑量，貝克是活度。','單位'],
+['放射性核種的「活度」，其 SI 單位是？',['西弗（Sv）','戈雷（Gy）','貝克（Bq）','侖琴（R）'],'C','1 Bq 代表每秒發生 1 次衰變。','單位'],
+['吸收劑量的 SI 單位戈雷（Gy），定義為？',['1 焦耳／公斤','1 焦耳／公尺','1 次衰變／秒','1 庫侖／公斤'],'A','1 Gy = 1 J/kg，即每公斤物質吸收 1 焦耳的能量。','單位'],
+['外部輻射防護的三項基本原則，不包括下列何者？',['縮短時間','增加距離','加強屏蔽','稀釋濃度'],'D','三原則為縮短時間、增加距離、加強屏蔽。','輻射防護'],
+['對點射源而言，距離增為原來的 2 倍，劑量率約變為原來的？',['1/2','1/4','2 倍','4 倍'],'B','劑量率與距離平方成反比，距離 2 倍則為 1/2² = 1/4。','輻射防護'],
+['某核種半衰期為 8 天，經過 24 天後，剩下的放射性約為原來的？',['1/2','1/3','1/6','1/8'],'D','24 天是 3 個半衰期，(1/2)³ = 1/8。','核物理'],
+['下列何種輻射穿透能力最弱，一張紙即可阻擋？',['阿伐粒子','貝他粒子','加馬射線','中子'],'A','阿伐粒子質量大、帶電多，在物質中很快失去能量。','輻射特性'],
+['下列何者屬於電磁輻射形式的游離輻射？',['阿伐粒子','貝他粒子','加馬射線','質子'],'C','X 射線與加馬射線是高能光子；阿伐、貝他與質子是粒子輻射。','輻射特性'],
+['屏蔽快中子時，下列哪一類材料效果較好？',['鉛','含氫量高的材料，如水或聚乙烯','鋼板','鎢'],'B','氫原子質量與中子相近，碰撞時最能使中子減速。','輻射防護'],
+['依我國游離輻射防護的規定，一般民眾的年有效劑量限度為？',['1 mSv','5 mSv','20 mSv','50 mSv'],'A','一般人年有效劑量限度為 1 mSv。（範例題，實際請以最新法規為準）','法規']
+].map(function(r){var n=norm({q:r[0],opts:r[1],ans:r[2],exp:r[3],cat:r[4]});n.sample=true;return n});
+
+/* ---------- state ---------- */
+var S={bank:null,stats:{},wrong:{},essays:[],exams:[],eans:{},emark:{},settings:{order:'seq',shuffle:false,examN:20}};
+/* ---------- 資料保護、備份與還原（第一階段）---------- */
+var KNOWN={bank:1,stats:1,wrong:1,essays:1,exams:1,eans:1,emark:1,settings:1};
+var SNAP='examBank.snap.v1',RESCUE='examBank.rescue.v1';
+var loadErr='',rawBad=null,saveBad=false,bkOpen=false,bkMsg='',bkIn='',bkOut='',bkPrev=null,bkNeedForce=false;
+function isObj(x){return !!x&&typeof x==='object'&&!Array.isArray(x)}
+function freshState(){return {bank:null,stats:{},wrong:{},essays:[],exams:[],eans:{},emark:{},settings:{order:'seq',shuffle:false,examN:20}}}
+/* 檢查主資料格式；回傳錯誤說明，空字串代表沒問題。只檢查、不修改。 */
+function checkMain(o){
+  if(!isObj(o))return '主資料不是物件格式';
+  if(o.bank!=null&&!(Array.isArray(o.bank)&&o.bank.every(function(q){return isObj(q)&&typeof q.q==='string'&&Array.isArray(q.opts)&&q.id!=null})))return '選擇題（bank）欄位格式不正確';
+  if(o.essays!=null&&!(Array.isArray(o.essays)&&o.essays.every(isObj)))return '申論題（essays）欄位格式不正確';
+  if(o.exams!=null&&!Array.isArray(o.exams))return '考卷（exams）欄位格式不正確';
+  var k,ks=['stats','wrong','eans','emark','settings'];
+  for(var i=0;i<ks.length;i++){k=ks[i];if(o[k]!=null&&!isObj(o[k]))return k+' 欄位格式不正確'}
+  return '';
+}
+/* 把儲存的文字載入記憶體。不認識的欄位原樣保留；格式不對就一個欄位都不改。 */
+function loadState(raw){
+  var o;
+  if(raw==null||raw==='')return '';
+  try{o=JSON.parse(raw)}catch(e){return 'JSON 解析失敗（'+e.message+'）'}
+  var m=checkMain(o);if(m)return m;
+  var d=freshState();
+  Object.keys(S).forEach(function(k){delete S[k]});
+  Object.assign(S,d);
+  S.bank=o.bank||null;S.stats=o.stats||{};S.wrong=o.wrong||{};
+  S.essays=Array.isArray(o.essays)?o.essays.map(normEssay):[];
+  S.exams=Array.isArray(o.exams)?o.exams:[];S.eans=o.eans||{};S.emark=o.emark||{};
+  S.settings=Object.assign(S.settings,o.settings||{});
+  Object.keys(o).forEach(function(k){if(!KNOWN[k])S[k]=o[k]});
+  return '';
+}
+function save(){
+  if(loadErr){saveBad=true;guardUpdate();return false}
+  var ok=LS.set(KEY,JSON.stringify(S));saveBad=!ok;guardUpdate();return ok;
+}
+
+/* ---- 同步 SHA-256（備份完整性檢查；不依賴 crypto.subtle，才能在點擊當下複製）---- */
+function sha256(str){
+  var P=[],c,d,pr;for(c=2;P.length<64;c++){pr=true;for(d=2;d*d<=c;d++)if(c%d===0){pr=false;break}if(pr)P.push(c)}
+  var K=P.map(function(p){return (Math.cbrt(p)%1)*4294967296|0});
+  var H=P.slice(0,8).map(function(p){return (Math.sqrt(p)%1)*4294967296|0});
+  function rr(v,a){return (v>>>a)|(v<<(32-a))}
+  var bytes=new TextEncoder().encode(str),len=bytes.length,total=((len+9+63)>>6)<<6;
+  var buf=new Uint8Array(total);buf.set(bytes);buf[len]=0x80;
+  var dv=new DataView(buf.buffer);dv.setUint32(total-8,Math.floor(len*8/4294967296));dv.setUint32(total-4,(len*8)>>>0);
+  var w=new Array(64),off,t,a,b,cc,dd,e,f,g,h,s0,s1,t1,t2;
+  for(off=0;off<total;off+=64){
+    for(t=0;t<16;t++)w[t]=dv.getUint32(off+t*4);
+    for(t=16;t<64;t++){s0=rr(w[t-15],7)^rr(w[t-15],18)^(w[t-15]>>>3);s1=rr(w[t-2],17)^rr(w[t-2],19)^(w[t-2]>>>10);w[t]=(w[t-16]+s0+w[t-7]+s1)|0}
+    a=H[0];b=H[1];cc=H[2];dd=H[3];e=H[4];f=H[5];g=H[6];h=H[7];
+    for(t=0;t<64;t++){
+      t1=(h+(rr(e,6)^rr(e,11)^rr(e,25))+((e&f)^(~e&g))+K[t]+w[t])|0;
+      t2=((rr(a,2)^rr(a,13)^rr(a,22))+((a&b)^(a&cc)^(b&cc)))|0;
+      h=g;g=f;f=e;e=(dd+t1)|0;dd=cc;cc=b;b=a;a=(t1+t2)|0;
+    }
+    H[0]=(H[0]+a)|0;H[1]=(H[1]+b)|0;H[2]=(H[2]+cc)|0;H[3]=(H[3]+dd)|0;H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0;
+  }
+  return H.map(function(v){return ('00000000'+(v>>>0).toString(16)).slice(-8)}).join('');
+}
+
+/* ---- 儲存區清單：所有 examBank.* 項目（快照與救援副本不算）---- */
+function storeKeys(){
+  var ks=[];
+  try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('examBank.')===0&&k!==SNAP&&k!==RESCUE&&k!==ESKEY)ks.push(k)}}catch(e){}
+  if(ks.indexOf(KEY)<0)ks.push(KEY);
+  ks.sort(function(a,b){return a===KEY?-1:b===KEY?1:(a<b?-1:1)});
+  return ks;
+}
+function countsOf(raw){
+  var o;try{o=JSON.parse(raw)}catch(e){return null}
+  var r={};
+  if(Array.isArray(o)){r.items=o.length;return r}
+  if(!isObj(o))return r;
+  Object.keys(o).forEach(function(k){
+    if(k==='settings')return;
+    var v=o[k];
+    if(Array.isArray(v))r[k]=v.length;else if(isObj(v))r[k]=Object.keys(v).length;else if(v!=null)r[k]=1;
+  });
+  return r;
+}
+var CN={bank:'選擇題',essays:'申論題',exams:'考卷',stats:'作答統計',wrong:'錯題',eans:'申論作答',emark:'申論自評',imgs:'圖片',links:'有圖的題目',ver:''};
+function cntText(c){
+  if(!c)return '（無法讀取）';
+  var p=Object.keys(c).filter(function(k){return k!=='ver'}).map(function(k){return (CN[k]||k)+' '+c[k]});
+  return p.length?p.join('、'):'（空）';
+}
+function bytesOf(s){return new TextEncoder().encode(s).length}
+function kb(n){return n<1024?n+' B':(n/1024).toFixed(n<10240?1:0)+' KB'}
+function usage(){
+  var tot=0,n=0,snap=0;
+  try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i),v=localStorage.getItem(k)||'';var b=bytesOf(k)+bytesOf(v);if(k===SNAP||k===RESCUE||k===ESKEY)snap+=b;else if(k.indexOf('examBank.')===0){tot+=b;n++}}}catch(e){}
+  return {bytes:tot,stores:n,snap:snap};
+}
+
+/* ---- 備份 ---- */
+function buildBackup(){
+  if(loadErr)return null;
+  var stores={},man=[];
+  storeKeys().forEach(function(k){
+    var raw=(k===KEY)?JSON.stringify(S):LS.get(k);
+    if(raw==null)return;
+    stores[k]=raw;man.push({key:k,chars:raw.length,sha256:sha256(raw),counts:countsOf(raw)});
+  });
+  return JSON.stringify({format:'exam-bank-backup',formatVersion:1,kind:'full',app:'exam-bank-stage2',exportedAt:new Date().toISOString(),required:Object.keys(stores),manifest:man,stores:stores});
+}
+function stamp(){var d=new Date(),p=function(n){return (n<10?'0':'')+n};return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())}
+
+/* ---- 驗證備份（只檢查，不寫入任何東西）---- */
+function validateBackup(text){
+  text=String(text||'').trim();
+  if(!text)return {err:'沒有內容可檢查。'};
+  var j;try{j=JSON.parse(text)}catch(e){return {err:'備份格式錯誤，可能複製不完整：'+e.message+'。目前資料沒有改變。'}}
+  if(Array.isArray(j)||(isObj(j)&&j.format==='exam-bank-essays'))return {legacy:true};
+  if(!isObj(j)||j.format!=='exam-bank-backup')return {err:'這不是 Exam Bank 完整備份。目前資料沒有改變。'};
+  if(!Number.isInteger(j.formatVersion)||j.formatVersion<1)return {err:'備份版本資訊不正確。目前資料沒有改變。'};
+  if(j.formatVersion>1)return {err:'這份備份來自較新的版本（格式 '+j.formatVersion+'），目前版本無法安全還原。請先更新程式。目前資料沒有改變。'};
+  if(!Array.isArray(j.manifest)||!isObj(j.stores))return {err:'備份缺少資料清單或內容。目前資料沒有改變。'};
+  var keys=Object.keys(j.stores);
+  if(j.manifest.length!==keys.length)return {err:'資料清單與內容的儲存區數量不一致。目前資料沒有改變。'};
+  var rows=[],i,m,raw,c,err='';
+  for(i=0;i<j.manifest.length;i++){
+    m=j.manifest[i];
+    if(!isObj(m)||typeof m.key!=='string'||m.key.indexOf('examBank.')!==0||m.key===SNAP||m.key===RESCUE||m.key===ESKEY)return {err:'資料清單含不合法的儲存區名稱。目前資料沒有改變。'};
+    raw=j.stores[m.key];
+    if(typeof raw!=='string')return {err:'儲存區「'+m.key+'」沒有內容。目前資料沒有改變。'};
+    if(raw.length!==m.chars||sha256(raw)!==m.sha256)return {err:'儲存區「'+m.key+'」的內容與檢查碼不符，備份可能被截斷或修改。目前資料沒有改變。'};
+    c=countsOf(raw);
+    if(c===null)return {err:'儲存區「'+m.key+'」不是有效的資料。目前資料沒有改變。'};
+    if(JSON.stringify(c)!==JSON.stringify(m.counts))return {err:'儲存區「'+m.key+'」的筆數與資料清單不符。目前資料沒有改變。'};
+    if(m.key===KEY){var o=JSON.parse(raw);err=checkMain(o);if(err)return {err:'主資料格式不正確：'+err+'。目前資料沒有改變。'}}
+    if(m.key===IKEY){var io;try{io=JSON.parse(raw)}catch(x){io=null}if(!imValid(io))return {err:'圖片儲存區的格式不正確。目前資料沒有改變。'}}
+    rows.push({key:m.key,nw:c,cur:(m.key===KEY&&!loadErr)?countsOf(JSON.stringify(S)):countsOf(LS.get(m.key)||'null'),curRaw:LS.get(m.key)});
+  }
+  if(!Array.isArray(j.required)||!j.required.every(function(r){return typeof r==='string'}))return {err:'這不是完整備份（沒有必要儲存區清單）。完整還原只接受完整備份，目前資料沒有改變。'};
+  for(i=0;i<j.required.length;i++)if(!Object.prototype.hasOwnProperty.call(j.stores,j.required[i]))return {err:'這份備份不完整：缺少必要儲存區「'+j.required[i]+'」。完整還原需要所有必要儲存區，因此不能用完整還原處理。目前資料沒有改變。'};
+  if(!j.stores[KEY]||j.required.indexOf(KEY)<0)return {err:'備份缺少題庫主資料，不能用完整還原處理。目前資料沒有改變。'};
+  var keep=storeKeys().filter(function(k){return !Object.prototype.hasOwnProperty.call(j.stores,k)&&LS.get(k)!=null});
+  return {bk:j,rows:rows,keep:keep};
+}
+
+/* ---- 還原前快照 ---- */
+function writeSnap(text,why){
+  var v=JSON.stringify({kind:'backup',at:Date.now(),why:why,text:text});
+  if(!LS.set(SNAP,v)){try{localStorage.removeItem(SNAP)}catch(e){}if(!LS.set(SNAP,v))return false}
+  return LS.get(SNAP)===v;
+}
+function readSnap(){var r=LS.get(SNAP);if(!r)return null;try{var o=JSON.parse(r);return (o&&o.kind==='backup'&&typeof o.text==='string')?o:null}catch(e){return null}}
+/* 救援副本：資料損壞時留下的原始文字。不是備份格式，不能用還原功能還原。 */
+function writeRescue(raw){var v=JSON.stringify({kind:'raw-corrupt',at:Date.now(),raw:String(raw==null?'':raw)});if(!LS.set(RESCUE,v)){try{localStorage.removeItem(RESCUE)}catch(e){}if(!LS.set(RESCUE,v))return false}return LS.get(RESCUE)===v}
+function readRescue(){var r=LS.get(RESCUE);if(!r)return null;try{var o=JSON.parse(r);return (o&&o.kind==='raw-corrupt'&&typeof o.raw==='string')?o:null}catch(e){return null}}
+
+/* ---- 套用還原：所有儲存區都寫入並讀回驗證才算成功，任一失敗全部回復 ---- */
+function applyRestore(pv,skipSnap){
+  var bk=pv.bk,keys=Object.keys(bk.stores);
+  var hadErr=!!loadErr;
+  if(!skipSnap){
+    var okSave=hadErr?writeRescue(rawBad):writeSnap(buildBackup(),'還原前');
+    if(!okSave){
+      bkNeedForce=true;bkMsg='無法留下'+(hadErr?'損壞資料的救援副本':'還原前快照')+'（儲存空間不足）。尚未改動任何資料。請先'+(hadErr?'按警告上的「複製原始資料」':'按「複製完整備份」')+'存到備忘錄，再選擇「已自行備份，仍要還原」。';
+      render();return;
+    }
+  }
+  var prev={},written=[],failed='';
+  keys.forEach(function(k){prev[k]=LS.get(k)});
+  try{
+    keys.forEach(function(k){
+      if(!LS.set(k,bk.stores[k]))throw new Error('寫入「'+k+'」失敗');
+      written.push(k);
+    });
+    keys.forEach(function(k){
+      var back=LS.get(k);
+      if(back!==bk.stores[k]||sha256(back)!==sha256(bk.stores[k]))throw new Error('讀回「'+k+'」時內容不符');
+    });
+  }catch(e){
+    failed=e.message;
+    var rbBad=[];
+    keys.forEach(function(k){
+      try{
+        if(LS.get(k)===prev[k])return;
+        if(prev[k]==null){localStorage.removeItem(k)}
+        else if(!LS.set(k,prev[k])||LS.get(k)!==prev[k])rbBad.push(k);
+      }catch(x){rbBad.push(k)}
+    });
+    bkMsg='還原失敗（'+failed+'）。'+(rbBad.length?'有 '+rbBad.length+' 個儲存區無法自動回復（'+rbBad.join('、')+'），請立刻使用「回復到還原前」或貼上先前複製的備份。':'所有儲存區已回復為還原前的資料，沒有任何改動。');
+    bkPrev=null;render();return;
+  }
+  /* 成功：重新載入記憶體 */
+  var err=loadState(LS.get(KEY));
+  if(err){bkMsg='還原已寫入，但重新載入時發現格式問題：'+err;render();return}
+  loadErr='';rawBad=null;saveBad=false;sess=null;pdfRes=null;pdfInfo=null;pending=null;impReport=null;cat='';exF='';ep=null;imLoad();imPrev=null;imMsg='';
+  bkPrev=null;bkIn='';bkNeedForce=false;
+  bkMsg='還原完成：'+keys.length+' 個儲存區全部寫入並讀回驗證。'+rowsText(pv.rows)+(pv.keep&&pv.keep.length?'保持不變的儲存區：'+pv.keep.join('、')+'。':'')+(hadErr?'還原前損壞的原始資料已另存為「救援副本」（無法直接還原，只能複製保存）。':'');
+  guardUpdate();render();window.scrollTo(0,0);
+}
+function rowsText(rows){return rows.map(function(r){return (r.key===KEY?'主資料':r.key)+'：'+cntText(r.nw)}).join('；')+'。'}
+
+/* ---- 介面 ---- */
+function guardHTML(){
+  var h='';
+  if(loadErr){
+    h+='<div class="note alert" role="alert"><b>資料讀取失敗，已啟動保護。</b><br>'+esc(loadErr)+'。為了不覆蓋原有資料，目前不會存檔，這段期間的變更關閉頁面後不會保留。<br>'
+      +'<button data-act="guard-copy">複製原始資料</button>　<button data-act="guard-restore">從備份還原</button>　<button data-act="guard-reset">放棄舊資料並重新開始</button></div>';
+  }else if(saveBad){
+    h+='<div class="note alert" role="alert"><b>無法儲存。</b>瀏覽器沒有允許寫入（可能空間已滿或在隱私瀏覽模式）。新的變更關閉頁面後會消失。<br><button data-act="guard-restore">前往備份與還原</button></div>';
+  }
+  return h;
+}
+function guardUpdate(){var g=$('#guard');if(g)g.innerHTML=guardHTML()}
+function previewHTML(pv){
+  if(pv.legacy){
+    var cc=countsOf(JSON.stringify(S));
+    return '<section class="card stack" style="gap:10px"><h2>匯入預覽（部分備份）</h2>'
+      +'<p class="msg"><b>這是舊版的申論題備份，不是完整備份。</b>它只含申論題（'+pv.n+' 題）'+(pv.hasAns?'，以及申論作答與自評':'')+'。</p>'
+      +'<p class="msg">確認後只會「加入」目前沒有的申論題，不會覆蓋或刪除任何現有資料。</p>'
+      +'<div><div class="lbl">以下資料保持不變</div><p class="msg">'+esc(cntText(cc))+'（申論題只會新增，不會改動既有題目）</p></div>'
+      +'<button class="btn primary" data-act="bk-apply" style="justify-content:center">確認加入申論題</button>'
+      +'<button class="btn sm" data-act="bk-cancel" style="align-self:flex-start">取消</button></section>';
+  }
+  var h='<section class="card stack" style="gap:10px"><h2>還原預覽（完整備份）</h2><p class="msg">備份時間：'+esc(pv.bk.exportedAt?new Date(pv.bk.exportedAt).toLocaleString('zh-TW'):'未知')+'。下列 '+pv.rows.length+' 個儲存區會被「整個取代」。</p>';
+  pv.rows.forEach(function(r){
+    var same=r.curRaw===pv.bk.stores[r.key];
+    h+='<div><div class="lbl">'+esc(r.key===KEY?'主資料（題庫、申論題、考卷、作答紀錄）':r.key)+(same?'・內容與目前相同':'')+'</div><p class="msg">目前：'+esc(r.cur?cntText(r.cur):'沒有資料')+'</p><p class="msg">備份：'+esc(cntText(r.nw))+'</p></div>';
+  });
+  h+='<div><div class="lbl">保持不變的儲存區</div><p class="msg">'+(pv.keep&&pv.keep.length?esc(pv.keep.join('、'))+'（備份中沒有，不會被改動）':'沒有（目前所有儲存區都包含在備份中）')+'</p></div>'
+    +'<p class="msg">還原前會先建立快照，所有儲存區都寫入並驗證成功才算完成，任何一步失敗都會回復原狀。</p>'
+    +'<button class="btn primary" data-act="bk-apply" style="justify-content:center">確認還原</button>'
+    +(bkNeedForce?'<button class="btn" data-act="bk-force" style="justify-content:center">已自行備份，仍要還原</button>':'')
+    +'<button class="btn sm" data-act="bk-cancel" style="align-self:flex-start">取消</button></section>';
+  return h;
+}
+function backupPanelHTML(){
+  var u=usage(),B=S.bank?S.bank.length:0,snap=readSnap(),resc=readRescue();
+  var h='<button class="btn'+(bkOpen?'':'')+'" data-act="bk-toggle" aria-expanded="'+bkOpen+'"><span>備份與還原</span><small>'+(bkOpen?'收合 ▲':'展開 ▼')+'</small></button>';
+  if(bkMsg)h+='<div class="note">'+esc(bkMsg)+'</div>';
+  if(bkPrev)h+=previewHTML(bkPrev);
+  if(!bkOpen)return h;
+  h+='<section class="card stack" style="gap:12px"><h2>備份</h2>'
+    +'<p class="msg">目前：'+esc(cntText(countsOf(JSON.stringify(S))))+'。</p>'
+    +'<p class="sub" style="margin:0">儲存空間：已使用約 '+kb(u.bytes)+'（'+u.stores+' 個儲存區）'+(u.snap?'，另有快照／救援副本 '+kb(u.snap):'')+'。瀏覽器的上限不固定，接近上限時請先備份。</p>'
+    +'<button class="btn primary" data-act="bk-copy" style="justify-content:center"'+(loadErr?' disabled':'')+'>複製完整備份</button>'
+    +'<button class="btn" data-act="bk-download" style="justify-content:center"'+(loadErr?' disabled':'')+'>儲存成 JSON 檔案</button>'
+    +'<button class="btn sm" data-act="bk-show" style="align-self:flex-start"'+(loadErr?' disabled':'')+'>顯示備份文字</button>'
+    +(bkOut?'<textarea id="bkout" readonly style="min-height:140px">'+esc(bkOut)+'</textarea>':'')
+    +'</section>'
+    +'<section class="card stack" style="gap:12px"><h2>還原</h2>'
+    +'<p class="sub" style="margin:0">先檢查備份，確認內容和筆數後才會還原。還原前會自動留一份目前資料的快照。</p>'
+    +'<input type="file" id="bkf" class="vh" accept=".json,.txt,application/json,text/plain"><label class="btn" for="bkf" style="justify-content:center">選擇備份檔案</label>'
+    +'<textarea id="bkin" placeholder="或把備份文字貼在這裡" style="min-height:100px">'+esc(bkIn)+'</textarea>'
+    +'<button class="btn" data-act="bk-check" style="justify-content:center">檢查貼上的備份</button>'
+    +(snap?'<div><div class="lbl">還原前快照（有效備份，可以回復）</div><p class="msg">'+esc(new Date(snap.at).toLocaleString('zh-TW'))+'・'+esc(snap.why||'')+'</p><button class="btn sm" data-act="bk-undo" style="align-self:flex-start">回復到這份快照</button></div>':'')
+    +'</section>'
+    +(resc?'<section class="card stack" style="gap:10px"><h2>損壞資料的救援副本（不能還原）</h2>'
+      +'<p class="msg">'+esc(new Date(resc.at).toLocaleString('zh-TW'))+' 讀取失敗時留下的原始文字（'+kb(bytesOf(resc.raw))+'）。<b>它不是備份，沒有辦法用「還原」按鈕還原</b>，內容可能不完整或已損壞。只能複製出來保存，或請人協助修復。</p>'
+      +'<button class="btn sm" data-act="bk-rescue-copy" style="align-self:flex-start">複製原始文字</button>'
+      +'<button class="btn sm" data-act="bk-rescue-del" style="align-self:flex-start">刪除救援副本</button></section>':'');
+  return h;
+}
+function bkCheck(text,label){
+  var v=validateBackup(text);
+  bkPrev=null;bkNeedForce=false;
+  if(v.err){bkMsg=(label?label+'：':'')+v.err;render();return}
+  if(v.legacy){
+    /* 舊版申論題備份：只加入沒有的題目，沿用原本的申論題還原 */
+    if(loadErr){bkMsg='資料讀取失敗中，不能匯入部分備份。請先用完整備份還原。';render();return}
+    var lj=JSON.parse(text),la=Array.isArray(lj)?lj:(Array.isArray(lj.essays)?lj.essays:[]);
+    bkPrev={legacy:true,text:text,label:label,n:la.length,hasAns:!Array.isArray(lj)&&(isObj(lj.answers)||isObj(lj.marks))};
+    bkMsg=(label?label+'：':'')+'偵測到部分備份，請確認預覽。';render();return;
+  }
+  bkMsg=(label?label+'：':'')+'備份檢查通過，請確認預覽。';bkPrev=v;render();
+}
+function bkAct(a,b){
+  if(a==='bk-toggle'){bkOpen=!bkOpen;render();return}
+  if(a==='guard-restore'){bkOpen=true;go('bank');return}
+  if(a==='guard-copy'){
+    var t=String(rawBad==null?'':rawBad),p=navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject();
+    p.then(function(){toast('已複製原始資料')},function(){bkOut=t;bkOpen=true;go('bank');toast('請長按文字全選後複製')});return;
+  }
+  if(a==='guard-reset'){
+    twice(b,'guardreset',function(){
+      var resc=rawBad!=null&&writeRescue(rawBad);
+      Object.keys(S).forEach(function(k){delete S[k]});Object.assign(S,freshState());
+      loadErr='';var rb=rawBad;rawBad=null;
+      var ok=save();guardUpdate();render();
+      toast(resc?'已重新開始。損壞的舊資料另存為救援副本（無法直接還原）':'已重新開始'+(rb!=null?'（無法另存舊資料）':''));
+    });return;
+  }
+  if(a==='bk-copy'){
+    var tx=buildBackup();if(tx===null){bkMsg='資料讀取失敗中，無法產生完整備份。';render();return}
+    var pr=navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(tx):Promise.reject();
+    pr.then(function(){bkOut='';bkMsg='已複製完整備份（'+kb(bytesOf(tx))+'）。請貼到「備忘錄」或「檔案」App 保存。';render()},
+      function(){bkOut=tx;bkMsg='無法自動複製，請長按下方備份文字全選後複製。';render();var x=$('#bkout');if(x){x.focus();x.select()}});
+    return;
+  }
+  if(a==='bk-show'){var t2=buildBackup();if(t2===null)return;bkOut=t2;render();var x2=$('#bkout');if(x2){x2.focus();x2.select()}return}
+  if(a==='bk-download'){
+    var t3=buildBackup();if(t3===null)return;
+    var name='exam-bank-backup-'+stamp()+'.json';
+    var viaAnchor=function(){
+      try{var el=document.createElement('a');el.href=URL.createObjectURL(new Blob([t3],{type:'application/json'}));el.download=name;document.body.appendChild(el);el.click();
+        setTimeout(function(){URL.revokeObjectURL(el.href);el.remove()},1500);bkMsg='已產生備份檔 '+name+'。若沒有出現下載，請改用「複製完整備份」。';render()}
+      catch(e){bkMsg='此環境無法下載檔案，請改用「複製完整備份」。';render()}
+    };
+    try{
+      if(window.claude&&claude.use){
+        claude.use('downloads').then(function(d){
+          if(!d){viaAnchor();return}
+          d.save({filename:name,data:t3}).then(function(){bkMsg='已送出備份檔 '+name+'。';render()},function(e){bkMsg=(e&&e.code==='declined')?'已取消儲存。':'無法儲存檔案，請改用「複製完整備份」。';render()});
+        },viaAnchor);return;
+      }
+    }catch(e){}
+    viaAnchor();return;
+  }
+  if(a==='bk-check'){bkCheck(bkIn,'貼上的備份');return}
+  if(a==='bk-cancel'){bkPrev=null;bkNeedForce=false;bkMsg='';render();return}
+  if(a==='bk-apply'){
+    if(bkPrev&&bkPrev.legacy){
+      var cur=buildBackup();
+      if(cur===null||!writeSnap(cur,'匯入申論題備份前')){bkMsg='無法建立還原前快照（或資料讀取失敗中）。尚未改動任何資料。';render();return}
+      var lp=bkPrev;bkPrev=null;go('essays');essayRestore(lp.text,(lp.label?lp.label+'・':'')+'部分備份');return;
+    }
+    twice(b,'bkapply',function(){applyRestore(bkPrev,false)});return}
+  if(a==='bk-rescue-copy'){var rs=readRescue();if(!rs)return;var pc=navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(rs.raw):Promise.reject();pc.then(function(){toast('已複製原始文字')},function(){bkOut=rs.raw;render();var xo=$('#bkout');if(xo){xo.focus();xo.select()}toast('請長按文字全選後複製')});return}
+  if(a==='bk-rescue-del'){twice(b,'rescuedel',function(){try{localStorage.removeItem(RESCUE)}catch(e){}bkMsg='已刪除救援副本。';render()});return}
+  if(a==='bk-force'){twice(b,'bkforce',function(){applyRestore(bkPrev,true)});return}
+  if(a==='bk-undo'){var s=readSnap();if(!s){bkMsg='沒有可回復的快照。';render();return}bkCheck(s.text,'還原前快照');return}
+}
+document.addEventListener('input',function(e){if(e.target&&e.target.id==='bkin')bkIn=e.target.value});
+document.addEventListener('change',function(e){
+  var t=e.target;
+  if(t&&t.id==='bkf'&&t.files&&t.files[0]){
+    var f=t.files[0],fr=new FileReader();t.value='';
+    fr.onload=function(){bkIn=String(fr.result||'');bkCheck(bkIn,f.name)};
+    fr.onerror=function(){bkMsg='無法讀取檔案，請重新選擇。';render()};
+    fr.readAsText(f,'UTF-8');
+  }
+});
+
+var rawMain=LS.get(KEY);loadErr=loadState(rawMain);if(loadErr)rawBad=rawMain;imLoad();
+function bank(){return S.bank&&S.bank.length?S.bank:SAMPLE}
+function catOf(q){return q.cat||'未分類'}
+function pool(){return bank().filter(function(q){if(exF&&examOf(q)!==exF)return false;if(!passF(q))return false;if(cat==='__conf'){var f=flagOf(q);return !!(f&&f.conf)}return !cat||catOf(q)===cat})}
+function wrongList(){return bank().filter(function(q){return S.wrong[q.id]})}
+var view='exams',sess=null,cat='',armed=null,timer=null,impText='',impMode='add',impMsg='',fallback='',impReport=null,pending=null,keepAll=false;
+
+/* ---------- helpers ---------- */
+function toast(m){var t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){t.hidden=true},2200)}
+function fmt(s){var m=Math.floor(s/60),r=s%60;return (m<10?'0':'')+m+':'+(r<10?'0':'')+r}
+function seg(key,items,val){return '<div class="seg" role="group">'+items.map(function(it){return '<button data-act="set" data-key="'+key+'" data-val="'+it[0]+'" class="'+(String(val)===String(it[0])?'on':'')+'">'+it[1]+'</button>'}).join('')+'</div>'}
+function tabsHTML(cur){
+  var wc=wrongList().length;
+  return '<div class="dockin">'+[['exams','考卷'],['home','選擇題'],['essays','申論題'],['wrongs','錯題'],['bank','題庫']].map(function(t){
+    return '<button class="tab'+(cur===t[0]?' on':'')+'" data-act="tab" data-v="'+t[0]+'">'+t[1]+(t[0]==='wrongs'&&wc?'<i class="dot">'+wc+'</i>':'')+'</button>';
+  }).join('')+'</div>';
+}
+function setDock(cls,html){var d=$('#dock');d.className='dock '+cls;d.innerHTML=html}
+
+/* ---------- views ---------- */
+/* ---------- 首頁練習設定：年度／場次／科目連動（只在記憶體，不寫入儲存資料）---------- */
+var hm='practice',fY='',fR='',fS='',fC='';
+function regMap(){var m={};(S.exams||[]).forEach(function(e){m[e.id]=e});return m}
+function metaOf(q,reg){
+  var r=reg[examOf(q)];
+  if(r)return {year:String(r.year||''),round:String(r.round||''),subject:String(r.subject||'')};
+  var p=parseExamCat(q.cat)||{};
+  return {year:p.year||'',round:p.round||'',subject:p.subject||''};
+}
+function passF(q){
+  if(!(fY||fR||fS||fC))return true;
+  var m=metaOf(q,regMap());
+  if(fY==='__none')return !m.year&&(!fC||catOf(q)===fC);
+  if(fY&&m.year!==fY)return false;
+  if(fR&&m.round!==fR)return false;
+  if(fS&&(fS==='__nosub'?m.subject!=='':m.subject!==fS))return false;
+  return true;
+}
+/* 依目前題庫算出各層選項與題數，並把不相容的下層選擇重設為「全部」 */
+function hmCalc(B){
+  var reg=regMap(),M=B.map(function(q){return metaOf(q,reg)});
+  function tally(ok,key){var o={};M.forEach(function(m,i){if(ok(m,i)){var k=key(m,i);o[k]=(o[k]||0)+1}});return o}
+  var years=tally(function(m){return !!m.year},function(m){return m.year});
+  var none=M.filter(function(m){return !m.year}).length;
+  if(fY==='__none'?!none:(fY&&!years[fY]))fY='';
+  var rounds={},subs={},cats={};
+  if(fY==='__none'){
+    fR='';fS='';
+    cats=tally(function(m){return !m.year},function(m,i){return catOf(B[i])});
+    if(fC&&!cats[fC])fC='';
+  }else{
+    fC='';
+    rounds=tally(function(m){return m.year&&m.round&&(!fY||m.year===fY)},function(m){return m.round});
+    if(fR&&!rounds[fR])fR='';
+    subs=tally(function(m){return m.year&&(!fY||m.year===fY)&&(!fR||m.round===fR)},function(m){return m.subject||'__nosub'});
+    if(fS&&!subs[fS])fS='';
+  }
+  var num=function(a,b){return a-b};
+  return {
+    years:Object.keys(years).sort(function(a,b){return b-a}).map(function(k){return [k,k+' 年度（'+years[k]+' 題）']}).concat(none?[['__none','未歸屬考卷（'+none+' 題）']]:[]),
+    rounds:Object.keys(rounds).sort(num).map(function(k){return [k,'第 '+k+' 次（'+rounds[k]+' 題）']}),
+    subs:Object.keys(subs).sort(function(a,b){return a.localeCompare(b,'zh-TW')}).map(function(k){return [k,(k==='__nosub'?'（未標科目）':k)+'（'+subs[k]+' 題）']}),
+    cats:Object.keys(cats).sort(function(a,b){return a.localeCompare(b,'zh-TW')}).map(function(k){return [k,k+'（'+cats[k]+' 題）']}),
+    none:none
+  };
+}
+function hmSel(id,label,opts,cur,allText){
+  return '<div class="setrow"><label class="fl" for="hf-'+id+'">'+label+'</label><select id="hf-'+id+'" data-hf="'+id+'"><option value="">'+allText+'</option>'
+    +opts.map(function(o){return '<option value="'+esc(o[0])+'"'+(o[0]===cur?' selected':'')+'>'+esc(o[1])+'</option>'}).join('')+'</select></div>';
+}
+function homeHTML(){
+  var B=bank(),seen=0,c=0,w=0;
+  B.forEach(function(q){var s=S.stats[q.id];if(s){seen++;c+=s.c;w+=s.w}});
+  var acc=(c+w)?Math.round(c/(c+w)*100)+'%':'—';
+  var O=hmCalc(B);
+  var P=pool().length,wl=wrongList().length,exN=S.settings.examN>0?Math.min(S.settings.examN,P):P;
+  var rand=S.settings.order==='rand';
+  var h='<div class="stack"><header><h1>Exam Bank</h1><p class="sub">繁體中文考試題庫練習</p></header>';
+  if(!S.bank)h+='<div class="note">目前是 '+SAMPLE.length+' 題範例題。<button data-act="tab" data-v="bank">貼上你的題目</button>即可換成自己的題庫。</div>';
+  if(exF){var xm=examById(exF);h+='<div class="note">目前只練習：'+esc(xm?xm.name:'這份考卷')+'（'+P+' 題）<button data-act="exam-clear">改回全部</button></div>'}
+  h+='<div class="band"><div><b>'+B.length+'</b><span>題庫</span></div><div><b>'+seen+'</b><span>已練習</span></div><div><b>'+acc+'</b><span>正確率</span></div><div><b>'+wl+'</b><span>錯題</span></div></div>';
+  h+='<section class="card stack hmcard" style="gap:18px"><h2>練習設定</h2>';
+  var modes=[['practice','一般練習',hm==='practice'&&!rand],['random','隨機練習',hm==='practice'&&rand],['wrong','錯題複習',hm==='wrong'],['exam','模擬考',hm==='exam']];
+  h+='<div class="setrow"><span class="fl">練習模式</span><div class="pills four">'+modes.map(function(m){return '<button class="pill'+(m[2]?' on':'')+'" data-act="hm-mode" data-v="'+m[0]+'" aria-pressed="'+m[2]+'">'+m[1]+'</button>'}).join('')+'</div></div>';
+  if(hm==='wrong'){
+    h+='<p class="msg">所有錯題會一起複習，不受年度、場次、科目限制。目前共 '+wl+' 題。</p>';
+  }else if(!exF){
+    h+=hmSel('y','考卷年度',O.years,fY,'全部年度');
+    if(fY==='__none'){
+      if(O.cats.length>1)h+=hmSel('c','分類',O.cats,fC,'全部分類');
+    }else{
+      h+=hmSel('r','考試場次',O.rounds,fR,'全部場次')+hmSel('s','考試科目',O.subs,fS,'全部科目');
+    }
+    var fc=B.filter(function(q){if(!passF(q))return false;var f=flagOf(q);return !!(f&&f.conf)}).length;
+    if(fc||cat==='__conf')h+='<div class="setrow"><span class="fl">答案待確認</span><div class="pills"><button class="pill bad'+(cat==='__conf'?' on':'')+'" data-act="hm-conf" aria-pressed="'+(cat==='__conf')+'">只練答案待確認的題目（'+fc+' 題）</button></div></div>';
+  }
+  if(hm==='exam')h+='<div class="setrow"><span class="fl">模擬考題數</span>'+seg('examN',[['10','10'],['20','20'],['50','50'],['0','全部']],S.settings.examN)+'</div>';
+  h+='<div class="setrow"><span class="fl">選項位置</span>'+seg('shuffle',[['0','固定'],['1','每次打亂']],S.settings.shuffle?'1':'0')+'</div>';
+  var go_=hm==='wrong'?['wrong','開始複習',wl,wl+' 題']:hm==='exam'?['exam','開始模擬考',exN,exN+' 題・交卷計分']:['practice','開始練習',P,P+' 題・即時解析'];
+  if(hm!=='wrong'){h+=P?'<p class="msg" id="hmcount">符合條件：共 '+P+' 題</p>':'<p class="msg" id="hmcount" style="color:var(--bad)">沒有符合條件的題目，請調整年度、場次或科目。</p>'}
+  else if(!wl)h+='<p class="msg" style="color:var(--bad)">目前沒有錯題。</p>';
+  h+='<button class="btn primary" data-act="start" data-mode="'+go_[0]+'"'+(go_[2]?'':' disabled')+'>'+go_[1]+'<small>'+go_[3]+'</small></button></section></div>';
+  return h;
+}
+function hmAct(a,b){
+  var v=b.dataset.v;
+  if(a==='hm-mode'){
+    if(v==='practice'||v==='random'){
+      hm='practice';var o=(v==='random')?'rand':'seq';
+      if(S.settings.order!==o){S.settings.order=o;save()}
+    }else hm=v;
+    keepScroll();
+  }else if(a==='hm-conf'){cat=(cat==='__conf')?'':'__conf';keepScroll()}
+}
+document.addEventListener('change',function(e){
+  var t=e.target,k=t&&t.dataset&&t.dataset.hf;if(!k)return;
+  if(k==='y')fY=t.value;else if(k==='r')fR=t.value;else if(k==='s')fS=t.value;else if(k==='c')fC=t.value;
+  keepScroll();
+});
+function wrongsHTML(){
+  var W=wrongList();
+  var h='<div class="stack"><header><h1>錯題</h1><p class="sub">答錯的題目會收集在這裡，複習答對後移除。</p></header>';
+  if(!W.length)return h+'<div class="empty">目前沒有錯題。</div></div>';
+  h+='<button class="btn primary" data-act="start" data-mode="wrong">開始複習<small>'+W.length+' 題</small></button>';
+  h+=W.map(function(q){
+    return '<div class="card miss">'+tagsWrap(q)+'<p>'+esc(q.q)+'</p>'+imgsHTML(q.id,'q')+'<p class="ans">正確答案：<span class="g">'+L[q.ans]+'. '+esc(q.opts[q.ans])+'</span></p>'+(q.exp?'<p class="sub">'+esc(q.exp)+'</p>':'')+imgsHTML(q.id,'a')+'</div>';
+  }).join('');
+  h+='<button class="btn sm" data-act="confirm" data-key="clearwrong" style="align-self:flex-start">清空錯題</button></div>';
+  return h;
+}
+function bankHTML(){
+  var B=bank(),FORMAT='Q: 題目文字\nA: 選項一\nB: 選項二\nC: 選項三\nD: 選項四\nANS: B\nEXP: 解析（可省略）\nCAT: 分類（可省略）\n\nQ: 下一題……';
+  var PROMPT='請把我貼的題目整理成下列格式。每題之間空一行，只輸出題目，不要加其他說明。ANS 填正確選項的字母。\n\n'+FORMAT;
+  window.__prompt=PROMPT;
+  var gs0=groupStats(B);
+  var h='<div class="stack"><header><h1>題庫</h1><p class="sub">目前 '+B.length+' 題'+(S.bank?'':'（範例題）')+'</p>'+(gs0.dupGroups?'<p class="sub" style="margin-top:2px">重複題 '+gs0.dupItems+' 題（'+gs0.dupGroups+' 組）'+(gs0.confGroups?'・答案待確認 '+gs0.confItems+' 題（'+gs0.confGroups+' 組）':'')+'</p>':'')+'</header>';
+  if(impReport&&impReport!==lastRep){lastRep=impReport;impOpen=false}
+  var busy=!!(pending||pdfRes||pdfInfo||impText.trim());
+  h+='<button class="btn'+(impOpen?'':' primary')+'" data-act="imp-toggle" aria-expanded="'+impOpen+'"><span>匯入題目</span><small>'+(impOpen?'收合 ▲':(busy?'進行中 ▼':'展開 ▼'))+'</small></button>';
+  h+=backupPanelHTML();
+  h+=imgPanelHTML();
+  if(impReport)h+=reportHTML(impReport);
+  if(pending)h+=pendingHTML(pending);
+  if(pdfRes)h+=pdfPreviewHTML();
+  if(impMsg)h+='<div class="note">'+esc(impMsg)+'</div>';
+  if(impOpen)h+='<section class="card stack" style="gap:12px"><h2>匯入題目</h2>'
+    +'<div class="setrow"><label>匯入方式</label>'+seg('impMode',[['add','加入現有'],['replace','取代全部']],impMode)+'</div>'
+    +(impMode==='replace'?'<p class="msg">取代全部會換掉目前的題庫，匯入時要再按一次確認。</p>':'')
+    +'<div class="setrow"><label>重複題處理</label>'+seg('keepAll',[['0','自動略過重複'],['1','保留所有原始題目']],keepAll?'1':'0')+'</div>'
+    +(keepAll?'<p class="msg">完全不去重：重複題與答案不同的題目都會保留，並在題目上標示。</p>':'')
+    +'<input type="file" id="jf" class="vh" accept=".json,.txt,application/json,text/plain"><label class="btn primary" for="jf" style="justify-content:center">選擇 JSON 檔案</label>'
+    +'<p class="sub" style="margin:0">或把題目貼在下面：</p>'
+    +'<textarea id="imp" placeholder="把題目貼在這裡，格式見下方">'+esc(impText)+'</textarea>'
+    +'<button class="btn" data-act="import" style="justify-content:center">匯入貼上的題目</button></section>';
+  if(impOpen)h+=pdfCardHTML();
+  h+='<section class="card stack" style="gap:10px"><details><summary>題目格式與轉換方式</summary><div class="stack" style="gap:12px">'
+    +'<p class="sub" style="margin:0">文字格式：每題一個段落，題與題之間空一行，ANS 可填 A、B、C 或 1、2、3。JSON 檔案格式：陣列，每題有 q、opts、ans（1 起算的整數）、exp、cat。</p><pre>'+esc(FORMAT)+'</pre>'
+    +'<p class="sub" style="margin:0">題目在 PDF 或照片裡？把它和下面這段指令一起貼給 Claude，再把結果貼回來。</p>'
+    +'<button class="btn sm" data-act="copy" style="align-self:flex-start">複製轉換指令</button>'
+    +(fallback?'<textarea id="fb" readonly style="min-height:120px">'+esc(fallback)+'</textarea>':'')
+    +'</div></details></section>';
+  h+='<section class="card"><details><summary>瀏覽題目（'+B.length+'）</summary><ol class="qlist">'+B.slice(0,500).map(function(q,i){var f=flagOf(q);return '<li><span class="n">'+(i+1)+'</span><span>'+(f?(f.conf?'［答案待確認］':'［重複題］'):'')+esc(q.q)+'</span></li>'}).join('')+'</ol>'+(B.length>500?'<p class="sub">只顯示前 500 題。</p>':'')+'</details></section>';
+  h+=essaysHTML();
+  h+='<section class="row"><button class="btn sm" data-act="confirm" data-key="resetstats">清除作答紀錄</button>'+(S.bank?'<button class="btn sm" data-act="confirm" data-key="resetbank">還原範例題</button>':'')+'</section></div>';
+  return h;
+}
+function statBand(a,b,c,d){return '<div class="band">'+[a,b,c,d].map(function(x){return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'}).join('')+'</div>'}
+function dupLines(gs){
+  return '<p class="msg">重複題：保留並標示（'+gs.dupGroups+' 組，共 '+gs.dupItems+' 題）</p>'
+    +'<p class="msg"'+(gs.confGroups?' style="color:var(--bad)"':'')+'>答案衝突：保留並標示「答案待確認」（'+gs.confGroups+' 組，共 '+gs.confItems+' 題）</p>';
+}
+function tagsHTML(q){
+  var f=flagOf(q);
+  return (f&&f.dup?'<span class="tag warn">重複題</span>':'')+(f&&f.conf?'<span class="tag bad">答案待確認</span>':'')+(q.src?'<span class="tag">'+esc(q.src)+'</span>':'');
+}
+function tagsWrap(q){var t=tagsHTML(q);return t?'<div>'+t+'</div>':''}
+function reportHTML(r){
+  var band=r.keep?statBand([r.total,'原始題目'],[r.added,'成功匯入'],[r.total-r.added,'遺漏'],[r.count,'題庫總數'])
+    :statBand([r.total,'檔案題數'],[r.added,'新增'],[r.dup,'重複略過'],[r.bad,'格式錯誤']);
+  return '<section class="card stack" style="gap:12px"><h2>匯入完成'+(r.keep?'（保留所有原始題目）':'')+'</h2><p class="msg">'+esc(r.file)+'・題庫現有 '+r.count+' 題</p>'
+    +band
+    +(r.keep&&r.gs?dupLines(r.gs):'')
+    +(r.note?'<p class="msg">'+esc(r.note)+'</p>':'')
+    +(r.bad?'<p class="msg">格式錯誤原因：'+esc(r.detail)+'</p>':'')
+    +(!r.keep&&r.conflict?'<p class="msg" style="color:var(--bad)">注意：有 '+r.conflict+' 題與已有題目題幹、選項相同但答案不同，已保留先出現的那題，請核對原始資料。</p>':'')
+    +(r.saved?'':'<p class="msg" style="color:var(--bad)">瀏覽器沒有允許儲存，關閉頁面後題庫會消失。</p>')
+    +'<button class="btn primary" data-act="start" data-mode="practice">立即開始練習<small>'+r.count+' 題</small></button>'
+    +'<button class="btn sm" data-act="dismiss" style="align-self:flex-start">關閉</button></section>';
+}
+function pendingHTML(r){
+  var total=r.items.length+r.skipped,p=plan(r.items,impMode,keepAll);
+  var band=keepAll?statBand([total,'原始題目'],[r.items.length,'將匯入'],[r.skipped,'無法匯入'],[p.list.length,'匯入後總數'])
+    :statBand([total,'檔案題數'],[p.added,'將新增'],[p.dup,'重複略過'],[r.skipped,'格式錯誤']);
+  var h='<section class="card stack" style="gap:12px"><h2>確認匯入'+(keepAll?'（保留所有原始題目）':'')+'</h2><p class="msg">'+esc(r.file)+'</p>'+band;
+  if(r.skipped)h+='<p class="msg">格式錯誤原因：'+esc(reasonText(r))+'。這些題目不會匯入。</p>';
+  if(keepAll)h+=dupLines(p.gs);
+  else if(p.conflict)h+='<p class="msg" style="color:var(--bad)">注意：有 '+p.conflict+' 題與已有題目題幹、選項相同但答案不同，匯入時會保留先出現的那題。</p>';
+  if(!total)h+='<p class="msg">檔案裡沒有題目。</p>';
+  if(r.items.length){
+    h+='<p class="msg">'+(impMode==='replace'?'取代全部：目前題庫會換成檔案內容，共 '+p.list.length+' 題。':'加入現有題庫：原有題目不會被覆蓋，匯入後共 '+p.list.length+' 題。')+'</p>'
+      +'<button class="btn primary" data-act="import-file" style="justify-content:center">確認匯入</button>';
+  }
+  return h+'<button class="btn sm" data-act="import-cancel" style="align-self:flex-start">取消</button></section>';
+}
+function quizHTML(){
+  var q=sess.list[sess.i],n=sess.list.length,sel=sess.sel[sess.i],exam=sess.mode==='exam';
+  var reveal=!exam&&sel!==null;
+  var h='<div class="stack" style="gap:16px"><div><div class="qtop"><button class="x" data-act="exit" aria-label="離開">✕</button><span class="cnt">'+(sess.i+1)+' / '+n+'</span>'+(exam?'<span class="clock" id="clock">'+fmt(Math.round((Date.now()-sess.t0)/1000))+'</span>':'')+'</div><div class="bar"><i style="width:'+((sess.i+(reveal?1:0))/n*100)+'%"></i></div></div>';
+  if(sess.confirmExit)h+='<div class="note">放棄這次'+(exam?'模擬考':'練習')+'？<button data-act="exit-yes">放棄</button>　<button data-act="exit-no">繼續作答</button></div>';
+  h+='<div class="card">'+(q.cat?'<span class="tag">'+esc(q.cat)+'</span>':'')+tagsHTML(q)+'<p class="qtext">'+esc(q.q)+'</p>'+imgsHTML(q.id,'q')+'</div><div class="opts">';
+  h+=q.opts.map(function(o,k){
+    var c='opt';
+    if(reveal){if(k===q.ans)c+=' good';else if(k===sel)c+=' bad'}else if(sel===k)c+=' picked';
+    return '<button class="'+c+'" data-act="pick" data-k="'+k+'"'+(reveal?' disabled':'')+'><span class="ltr">'+L[k]+'</span><span class="otxt">'+esc(o)+'</span></button>';
+  }).join('')+'</div>';
+  if(reveal){
+    h+='<p class="verdict '+(sel===q.ans?'good':'bad')+'">'+(sel===q.ans?'答對了':'答錯了，正確答案是 '+L[q.ans])+'</p>'+expBlock('解析',q.exp?esc(q.exp):'',q.id)+(flagOf(q)&&flagOf(q).conf?'<div class="note">'+(q.pend?'這題已標記為答案待確認（來自 PDF 匯入），請對照原始解答。':'題庫裡有另一筆題幹、選項相同但答案不同的題目，這題答案待確認。')+'</div>':'');
+  }
+  h+='</div>';
+  return h;
+}
+function quizDock(){
+  var exam=sess.mode==='exam',last=sess.i===sess.list.length-1,sel=sess.sel[sess.i];
+  if(exam){
+    var un=sess.sel.filter(function(x){return x===null}).length;
+    return '<div class="dockin"><button class="btn" data-act="prev"'+(sess.i===0?' disabled':'')+'>上一題</button>'+
+      (last?'<button class="btn primary" data-act="finish">交卷'+(un?'（'+un+' 題未答）':'')+'</button>':'<button class="btn primary" data-act="next">下一題</button>')+'</div>';
+  }
+  if(sel===null)return '<div class="dockin"><button class="btn" disabled>請選擇答案</button></div>';
+  return '<div class="dockin"><button class="btn primary" data-act="'+(last?'finish':'next')+'">'+(last?'完成':'下一題')+'</button></div>';
+}
+function resultHTML(){
+  var r=sess.result,pct=Math.round(r.ok/r.n*100);
+  var h='<div class="stack"><header><h2>'+(sess.mode==='exam'?'模擬考結果':sess.mode==='wrong'?'錯題複習結果':'練習結果')+'</h2></header>'
+    +'<div><p class="score">'+r.ok+'<small> / '+r.n+'</small></p><p class="sub">正確率 '+pct+'%'+(sess.mode==='exam'?'・用時 '+fmt(r.secs):'')+'</p></div>';
+  if(!r.miss.length)return h+'<div class="note">全部答對。</div></div>';
+  h+='<h2>答錯與未答（'+r.miss.length+'）</h2>';
+  h+=r.miss.map(function(m){
+    var q=m.q;
+    return '<div class="card miss">'+tagsWrap(q)+'<p>'+esc(q.q)+'</p>'+imgsHTML(q.id,'q')+'<p class="ans">你的答案：<span class="r">'+(m.s===null?'未作答':L[m.s]+'. '+esc(q.opts[m.s]))+'</span><br>正確答案：<span class="g">'+L[q.ans]+'. '+esc(q.opts[q.ans])+'</span></p>'+(q.exp?'<p class="sub">'+esc(q.exp)+'</p>':'')+imgsHTML(q.id,'a')+'</div>';
+  }).join('');
+  return h+'</div>';
+}
+
+/* ---------- render ---------- */
+function render(){
+  clearInterval(timer);guardUpdate();
+  var el=$('#view');
+  if(view==='home'){el.innerHTML=homeHTML();setDock('tabs',tabsHTML('home'))}
+  else if(view==='exams'){el.innerHTML=examsViewHTML();setDock('tabs',tabsHTML('exams'))}
+  else if(view==='exam'){el.innerHTML=examDetailHTML();setDock('tabs',tabsHTML('exams'))}
+  else if(view==='epractice'){el.innerHTML=epHTML();setDock('acts',epDock())}
+  else if(view==='essays'){el.innerHTML=essaysViewHTML();setDock('tabs',tabsHTML('essays'))}
+  else if(view==='wrongs'){el.innerHTML=wrongsHTML();setDock('tabs',tabsHTML('wrongs'))}
+  else if(view==='bank'){el.innerHTML=bankHTML();setDock('tabs',tabsHTML('bank'))}
+  else if(view==='quiz'){
+    el.innerHTML=quizHTML();setDock('acts',quizDock());
+    if(sess.mode==='exam')timer=setInterval(function(){var c=$('#clock');if(c)c.textContent=fmt(Math.round((Date.now()-sess.t0)/1000))},1000);
+  }else if(view==='result'){
+    el.innerHTML=resultHTML();
+    setDock('acts','<div class="dockin"><button class="btn" data-act="tab" data-v="home">回首頁</button><button class="btn primary" data-act="start" data-mode="'+sess.mode+'">再來一次</button></div>');
+  }
+}
+function go(v){view=v;render();window.scrollTo(0,0)}
+
+/* ---------- quiz logic ---------- */
+function prep(q){
+  if(!S.settings.shuffle)return q;
+  var idx=shuffle(q.opts.map(function(_,i){return i}));
+  return Object.assign({},q,{opts:idx.map(function(i){return q.opts[i]}),ans:idx.indexOf(q.ans)});
+}
+function start(mode){
+  var list=mode==='wrong'?wrongList():pool().slice();
+  if(!list.length){toast('沒有可用的題目');return}
+  if(mode!=='practice'||S.settings.order==='rand')list=shuffle(list);
+  if(mode==='exam'&&S.settings.examN>0)list=list.slice(0,S.settings.examN);
+  list=list.map(prep);
+  sess={mode:mode,list:list,i:0,sel:list.map(function(){return null}),t0:Date.now(),confirmExit:false};
+  go('quiz');
+}
+function rec(q,good){
+  var s=S.stats[q.id]||{c:0,w:0};
+  good?s.c++:s.w++;S.stats[q.id]=s;
+  if(!good)S.wrong[q.id]=1;else if(sess.mode==='wrong')delete S.wrong[q.id];
+  save();
+}
+function finish(){
+  var ok=0,miss=[];
+  sess.list.forEach(function(q,i){
+    var s=sess.sel[i],good=s===q.ans;
+    if(sess.mode==='exam')rec(q,good);
+    good?ok++:miss.push({q:q,s:s});
+  });
+  sess.result={ok:ok,n:sess.list.length,miss:miss,secs:Math.round((Date.now()-sess.t0)/1000)};
+  go('result');
+}
+function wsk(s){return String(s).normalize('NFKC').replace(/\s+/g,'')}
+function qkey(q){return wsk(q.q)+'\u0001'+q.opts.map(wsk).sort().join('\u0002')}
+function ctext(q){return wsk(q.opts[q.ans])}
+function groupMap(list){var g={};list.forEach(function(q){var k=qkey(q);(g[k]=g[k]||[]).push(q)});return g}
+function groupStats(list){
+  var g=groupMap(list),dg=0,di=0,cg=0,ci=0;
+  Object.keys(g).forEach(function(k){
+    var a=g[k];if(a.length<2)return;
+    dg++;di+=a.length;
+    var t={};a.forEach(function(q){t[ctext(q)]=1});
+    if(Object.keys(t).length>1){cg++;ci+=a.length}
+  });
+  return {dupGroups:dg,dupItems:di,confGroups:cg,confItems:ci};
+}
+var FL={bank:null,len:-1,map:{}};
+function flagOf(q){
+  var B=bank();
+  if(FL.bank!==B||FL.len!==B.length){
+    FL.bank=B;FL.len=B.length;FL.map={};
+    var g=groupMap(B);
+    Object.keys(g).forEach(function(k){
+      var a=g[k];if(a.length<2)return;
+      var t={};a.forEach(function(x){t[ctext(x)]=1});
+      var conf=Object.keys(t).length>1;
+      a.forEach(function(x){FL.map[x.id]={dup:true,conf:conf,n:a.length}});
+    });
+  }
+  var r=FL.map[q.id]||null;
+  if(q.pend)return {dup:!!(r&&r.dup),conf:true,n:r?r.n:1};
+  return r;
+}
+function plan(items,mode,keep){
+  var base=(mode==='replace'||!S.bank)?[]:S.bank.slice();
+  if(keep){
+    var used={},cnt={};
+    base.forEach(function(q){used[q.id]=1});
+    items.forEach(function(q){
+      var c=Object.assign({},q),want=c.uid||'';
+      delete c.uid;
+      if(!want){var kk=qkey(q);cnt[kk]=(cnt[kk]||0)+1;want=hash(c.q+'\u0001'+kk)+'-'+cnt[kk]}
+      var id=want,n=1;
+      while(used[id]){n++;id=want+'~'+n}
+      c.id=id;used[id]=1;base.push(c);
+    });
+    return {list:base,added:items.length,dup:0,conflict:0,gs:groupStats(base)};
+  }
+  var keys={},ids={},added=0,dup=0,conflict=0;
+  base.forEach(function(q){var k=qkey(q);keys[k]=q;ids[q.id]=k});
+  items.forEach(function(q){
+    var k=qkey(q);
+    if(keys[k]){dup++;if(ctext(keys[k])!==ctext(q))conflict++;return}
+    var c=Object.assign({},q);
+    delete c.uid;
+    if(ids[c.id]&&ids[c.id]!==k)c.id=hash(c.q+'\u0001'+k);
+    keys[k]=c;ids[c.id]=k;base.push(c);added++;
+  });
+  return {list:base,added:added,dup:dup,conflict:conflict};
+}
+function applyImport(r,btn,fromText){
+  if(!r.items.length){
+    impMsg='沒有可匯入的題目'+(r.skipped?'：'+reasonText(r):'')+'。目前題庫沒有改變。';
+    impReport=null;if(!fromText)pending=null;render();return;
+  }
+  var run=function(){
+    var p=plan(r.items,impMode,keepAll);
+    S.bank=p.list;
+    var ok=save();
+    impReport={file:r.file,total:r.items.length+r.skipped,added:p.added,dup:p.dup,conflict:p.conflict,keep:keepAll,gs:p.gs,bad:r.skipped,detail:reasonText(r),count:p.list.length,saved:ok};
+    pending=null;impMsg='';cat='';if(fromText)impText='';
+    render();window.scrollTo(0,0);
+  };
+  if(impMode==='replace'&&S.bank)twice(btn,'replaceimp',run);else run();
+}
+function onFile(file){
+  pending=null;impReport=null;impMsg='';
+  var fr=new FileReader();
+  fr.onload=function(){
+    var r=parseInput(fr.result);r.file=file.name;
+    if(r.fatal)impMsg=r.fatal;else pending=r;
+    render();window.scrollTo(0,0);
+  };
+  fr.onerror=function(){impMsg='無法讀取檔案，請重新選擇。';render()};
+  fr.readAsText(file,'UTF-8');
+}
+function twice(btn,key,fn){
+  if(armed===key){armed=null;fn();return}
+  armed=key;var t=btn.textContent;btn.textContent='再按一次確認';btn.classList.add('warn');
+  setTimeout(function(){if(armed===key){armed=null;btn.textContent=t;btn.classList.remove('warn')}},3000);
+}
+
+/* ---------- PDF 匯入（第二階段新增）---------- */
+var PDF_WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+var pdfOkOpen=false,pdfDoc=null,pdfInfo=null,pdfRes=null,pdfBusy='';
+function pdfReady(){return typeof window.pdfjsLib!=='undefined'&&window.pdfjsLib&&!!window.pdfjsLib.getDocument}
+function cjk(c){return !!c&&(c>='　'&&c<='鿿'||c>='＀'&&c<='￯')}
+function joinLines(arr){
+  var out='';
+  arr.forEach(function(s){
+    s=String(s).trim();if(!s)return;
+    if(!out)out=s;
+    else out+=(cjk(out.slice(-1))&&cjk(s.charAt(0))?'':' ')+s;
+  });
+  return out.replace(/\s+/g,' ').trim();
+}
+function reflowEssay(arr){
+  var out=[];
+  arr.forEach(function(s){
+    s=String(s).trim();if(!s)return;
+    if(!out.length||/^(?:[\(（]\s*\d+\s*[\)）]|[A-Da-d][\.、]|\d+\s*[\.、．])/.test(s))out.push(s);
+    else out[out.length-1]+=(cjk(out[out.length-1].slice(-1))&&cjk(s.charAt(0))?'':' ')+s;
+  });
+  return out.join('\n');
+}
+function cleanName(n){
+  return n.replace(/\.pdf$/i,'').replace(/[【\[（(]\s*解答\s*[】\]）)]/g,'').replace(/試題/g,'').replace(/\s+/g,' ').trim();
+}
+function loadPdf(file){
+  pdfOkOpen=false;pdfRes=null;pdfInfo=null;pdfBusy='';impMsg='';impReport=null;pending=null;
+  if(pdfDoc&&pdfDoc.destroy){try{pdfDoc.destroy()}catch(e){}}
+  pdfDoc=null;render();
+  if(!pdfReady()){impMsg='PDF 解析元件沒有載入（需要網路連線）。請連上網路後重新開啟此頁，再試一次。';render();return}
+  try{pdfjsLib.GlobalWorkerOptions.workerSrc=PDF_WORKER}catch(e){}
+  var fr=new FileReader();
+  fr.onerror=function(){impMsg='無法讀取檔案，請重新選擇。';render()};
+  fr.onload=function(){
+    pdfjsLib.getDocument({data:new Uint8Array(fr.result)}).promise.then(function(doc){
+      pdfDoc=doc;var nm=cleanName(file.name);
+      var pe=parseExamCat(nm)||{};pdfInfo={name:file.name,pages:doc.numPages,cat:nm,src:nm,yr:pe.year||'',rd:pe.round||'',sb:pe.subject||''};
+      render();
+    },function(err){impMsg='無法開啟這個 PDF：'+(err&&err.message?err.message:'檔案格式不正確')+'。';render()});
+  };
+  fr.readAsArrayBuffer(file);
+}
+/* 取出每頁文字，依座標重組成「行」，並記錄頁碼 */
+function pdfExtract(doc,onProg){
+  var lines=[],chars=0,thin=0,n=doc.numPages;
+  function one(p){
+    return doc.getPage(p).then(function(pg){return pg.getTextContent()}).then(function(tc){
+      var rows=[],cnt=0;
+      var hs=tc.items.filter(function(it){return it.str&&it.transform}).map(function(it){return it.height||Math.abs(it.transform[3])||10}).sort(function(a,b){return a-b});
+      var tol=Math.max(2,(hs[Math.floor(hs.length/2)]||10)*0.6);
+      tc.items.forEach(function(it){
+        if(!it.str||!it.transform)return;
+        var x=it.transform[4],y=it.transform[5],h=it.height||Math.abs(it.transform[3])||10,r=null;
+        for(var i=rows.length-1;i>=0&&i>=rows.length-8;i--){if(Math.abs(rows[i].y-y)<=tol){r=rows[i];break}}
+        if(!r){r={y:y,its:[]};rows.push(r)}
+        r.its.push({x:x,w:it.width||0,h:h,s:it.str});
+      });
+      rows.sort(function(a,b){return b.y-a.y});
+      rows.forEach(function(r){
+        r.its.sort(function(a,b){return a.x-b.x});
+        var t='',end=null;
+        r.its.forEach(function(it){
+          if(end!==null&&it.x-end>it.h*0.25&&!/\s$/.test(t)&&!/^\s/.test(it.s))t+=' ';
+          t+=it.s;end=it.x+it.w;
+        });
+        t=t.replace(/\s+/g,' ').trim();
+        if(!t||/^第\s*\d+\s*頁\s*[\/／]\s*共\s*\d+\s*頁$/.test(t))return;
+        lines.push({t:t,pg:p});cnt+=t.length;
+      });
+      chars+=cnt;if(cnt<15)thin++;
+    });
+  }
+  var p=0;
+  return new Promise(function(res,rej){
+    (function next(){
+      if(p>=n){res({lines:lines,chars:chars,pages:n,scanned:(thin>n/2)||chars<20*n/2});return}
+      p++;onProg(p,n);
+      one(p).then(function(){setTimeout(next,0)},rej);
+    })();
+  });
+}
+/* 從「(1)…(2)…(3)…(4)…」拆出題幹與選項 */
+function splitOptsPdf(text){
+  var MK=/[\(（]\s*([1-8])\s*[\)）]/g,ms=[],m;
+  while((m=MK.exec(text)))ms.push({n:+m[1],s:m.index,e:m.index+m[0].length});
+  for(var i=ms.length-1;i>=0;i--){
+    if(ms[i].n!==1)continue;
+    var seq=[ms[i]],want=2;
+    for(var j=i+1;j<ms.length;j++){if(ms[j].n===want){seq.push(ms[j]);want++}}
+    if(seq.length>=2){
+      var stem=text.slice(0,seq[0].s).replace(/\s+/g,' ').trim(),opts=[];
+      for(var k=0;k<seq.length;k++)opts.push(text.slice(seq[k].e,k<seq.length-1?seq[k+1].s:text.length).replace(/\s+/g,' ').trim());
+      return {stem:stem,opts:opts};
+    }
+  }
+  return {stem:text.replace(/\s+/g,' ').trim(),opts:[]};
+}
+var P_HDR=/^[一二三四五六七八九十]+\s*[、，.．]\s*/;
+var P_START=/^(\d{1,3})\s*[\.．、]\s*(.*)$/;
+var P_ANS1=/(?:^|\s)[\[［【]\s*(?:解|答案|解答)\s*[:：]?\s*[\]］】]\s*[:：]?/;
+var P_ANS2=/^\s*(?:解答|答案|解)\s*[:：]/;
+function findAnsMark(lines){
+  for(var i=0;i<lines.length;i++){
+    var t=lines[i].t,m=P_ANS1.exec(t)||P_ANS2.exec(t);
+    if(m)return {i:i,before:t.slice(0,m.index),after:t.slice(m.index+m[0].length)};
+  }
+  return null;
+}
+function parseAns(txt,nopt){
+  txt=txt.trim();
+  var m=txt.match(/^[\(（]\s*([1-8])\s*[\)）]\s*(.*)$/)||txt.match(/^([1-8])(?:\s+|[\.、．]\s*|$)(.*)$/);
+  if(m){var k=+m[1]-1;return {ans:k<nopt?k:null,exp:m[2]||''}}
+  m=txt.match(/^[\(（]\s*([A-Ha-h])\s*[\)）]\s*(.*)$/)||txt.match(/^([A-Ha-h])(?:\s+|[\.、．]\s*|$)(.*)$/);
+  if(m){var k2='ABCDEFGH'.indexOf(m[1].toUpperCase());return {ans:k2<nopt?k2:null,exp:m[2]||''}}
+  return {ans:null,exp:txt};
+}
+function parseExamLines(lines){
+  var items=[],essays=[],mode='mcq',cur=null;
+  function finish(c){
+    var mk=findAnsMark(c.lines),bl,al=[];
+    if(mk){
+      bl=c.lines.slice(0,mk.i).map(function(x){return x.t});
+      if(mk.before.trim())bl.push(mk.before);
+      if(mk.after.trim())al.push(mk.after);
+      c.lines.slice(mk.i+1).forEach(function(x){al.push(x.t)});
+    }else bl=c.lines.map(function(x){return x.t});
+    var pgEnd=c.lines[c.lines.length-1].pg;
+    if(c.mode==='essay'){
+      var eq=reflowEssay(bl),ea=reflowEssay(al);
+      essays.push({no:c.n,pg:c.pg,pgEnd:pgEnd,q:eq,q0:eq,ans:ea,pend:!ea.trim(),sel:true});
+      return;
+    }
+    var sp=splitOptsPdf(joinLines(bl)),it={no:c.n,pg:c.pg,pgEnd:pgEnd,q:sp.stem,opts:sp.opts.slice(),ans:null,exp:'',pend:false,sel:false};
+    if(mk){var a=parseAns(joinLines(al),sp.opts.length);it.ans=a.ans;it.exp=a.exp.trim()}
+    it.status=(!it.q||it.opts.length<2)?'bad':(it.ans===null?'noans':'ok');
+    if(it.status==='bad'){it.q=joinLines(bl);it.opts=[];it.ans=null}
+    it.sel=it.status==='ok';
+    while(it.opts.length<4)it.opts.push('');
+    items.push(it);
+  }
+  function close(){if(cur){finish(cur);cur=null}}
+  lines.forEach(function(L){
+    var t=L.t,m;
+    if(P_HDR.test(t)&&t.length<90){
+      if(/問答|申論|簡答|論述|計算|填充/.test(t)){close();mode='essay';return}
+      if(/單選|選擇|是非|測驗/.test(t)){close();mode='mcq';return}
+    }
+    m=t.match(P_START);
+    if(m&&+m[1]===(cur?cur.n+1:1)){close();cur={n:+m[1],mode:mode,pg:L.pg,lines:[{t:m[2],pg:L.pg}]};return}
+    if(cur)cur.lines.push(L);
+  });
+  close();
+  return {items:items,essays:essays};
+}
+
+/* ---------- PDF 畫面 ---------- */
+function pdfCardHTML(){
+  var h='<section class="card stack" style="gap:12px"><h2>從 PDF 匯入</h2>'
+    +'<p class="sub" style="margin:0">只支援可以複製文字的 PDF。解析後先顯示預覽，由你確認後才會寫入題庫。匯入方式沿用上方的設定。</p>'
+    +'<input type="file" id="pf" class="vh" accept=".pdf,application/pdf"><label class="btn" for="pf" style="justify-content:center">選擇 PDF 檔案</label>';
+  if(pdfInfo){
+    h+='<p class="msg">檔案：'+esc(pdfInfo.name)+'・共 '+pdfInfo.pages+' 頁</p>'
+      +'<div class="setrow"><label for="pyr">年度（例：115）</label><input type="text" id="pyr" inputmode="numeric" value="'+esc(pdfInfo.yr)+'"></div>'
+      +'<div class="setrow"><label for="prd">考試次數（例：2）</label><input type="text" id="prd" inputmode="numeric" value="'+esc(pdfInfo.rd)+'"></div>'
+      +'<div class="setrow"><label for="psb">考試科目</label><input type="text" id="psb" value="'+esc(pdfInfo.sb)+'"></div>'
+      +'<p class="sub" style="margin:0">年度與次數都填寫後，選擇題與申論題會歸入同一份考卷。</p>'
+      +'<div class="setrow"><label for="pcat">題目分類</label><input type="text" id="pcat" value="'+esc(pdfInfo.cat)+'"></div>'
+      +'<div class="setrow"><label for="psrc">來源標記（年度、場次）</label><input type="text" id="psrc" value="'+esc(pdfInfo.src)+'"></div>'
+      +'<button class="btn primary" data-act="pdf-run" style="justify-content:center"'+(pdfBusy?' disabled':'')+'>'+(pdfBusy?'解析中…':'開始解析')+'</button>'
+      +'<p class="msg" id="pprog">'+esc(pdfBusy)+'</p>';
+  }
+  return h+'</section>';
+}
+function pdfStats(){
+  var R=pdfRes,st={mcq:R.items.length,ess:R.essays.length,noans:0,bad:0,selQ:0,selE:0};
+  R.items.forEach(function(it){if(it.status==='noans'&&it.ans===null)st.noans++;if(it.status==='bad')st.bad++;if(it.sel)st.selQ++});
+  R.essays.forEach(function(e){if(e.sel)st.selE++});
+  return st;
+}
+function pdfSummaryText(){
+  var st=pdfStats();
+  return '勾選：選擇題 '+st.selQ+' 題、申論題 '+st.selE+' 題'
+    +(pdfRes.dupSame?'（其中 '+pdfRes.dupSame+' 題已匯入過，會略過）':'')
+    +(impMode==='replace'&&S.bank?'。取代全部：目前題庫 '+S.bank.length+' 題會換成這次勾選的 '+st.selQ+' 題':'。加入現有：原有題目全部保留')+'。';
+}
+function pdfPreviewHTML(){
+  var R=pdfRes,st=pdfStats();
+  var h='',info='<section class="card stack" style="gap:12px"><h2>PDF 匯入預覽</h2><p class="msg">'+esc(pdfInfo.name)+'・'+pdfInfo.pages+' 頁・分類「'+esc(pdfInfo.cat)+'」</p>'
+    +statBand([st.mcq,'選擇題'],[st.ess,'申論題'],[st.noans,'答案待確認'],[st.bad,'不完整'])
+    +'<p class="msg">辨識正常的題目已自動勾選；有問題的會列在「需要你看一下」。答案無法辨識的題目不會自動猜答案，需要你選好答案後才能勾選匯入。申論題只會加入「申論題」題庫，不會進入選擇題的練習和模擬考。</p></section>';
+  function itemCard(it,i){
+    var h='',can=it.ans!==null&&it.status!=='bad';
+    h+='<section class="card stack pq'+(it.sel?'':' off')+'" style="gap:10px">'
+      +'<div class="row" style="align-items:center;justify-content:space-between;gap:8px"><span class="msg">第 '+it.no+' 題・第 '+it.pg+(it.pgEnd!==it.pg?'–'+it.pgEnd:'')+' 頁</span>'
+      +(it.status==='bad'?'<span class="tag bad">不完整</span>':it.ans===null?'<span class="tag bad">答案待確認</span>':it.pend?'<span class="tag bad">待確認</span>':it.man?'<span class="tag warn">手動選答案</span>':'<span class="tag">已辨識</span>')+'</div>'
+      +dupNote(it)
+      +'<label class="chk"><input type="checkbox" data-pf="sel" data-i="'+i+'"'+(it.sel?' checked':'')+(can?'':' disabled')+'>匯入這題'+(can?'':'（請先選好答案）')+'</label>'
+      +'<textarea data-pf="q" data-i="'+i+'" rows="'+Math.min(12,Math.max(3,Math.ceil(it.q.length/20)))+'" aria-label="題目">'+esc(it.q)+'</textarea>'
+      +it.opts.map(function(o,k){return '<div class="orow"><b class="mono">'+'ABCD'.charAt(k)+'</b><input type="text" data-pf="o" data-i="'+i+'" data-k="'+k+'" value="'+esc(o)+'" aria-label="選項 '+'ABCD'.charAt(k)+'"></div>'}).join('')
+      +'<div class="setrow"><label>正確答案</label><div class="seg">'+it.opts.map(function(o,k){return '<button data-act="pdf-ans" data-i="'+i+'" data-k="'+k+'" class="'+(it.ans===k?'on':'')+'">'+'ABCD'.charAt(k)+'</button>'}).join('')+'</div>'
+      +(it.ans===null?'<p class="msg" style="color:var(--bad)">PDF 沒有辨識到答案。</p>':'')+'</div>'
+      +'<label class="chk"><input type="checkbox" data-pf="pend" data-i="'+i+'"'+(it.pend?' checked':'')+'>標記為答案待確認</label>'
+      +'<details><summary>解析（'+(it.exp?'有':'無')+'）</summary><textarea data-pf="exp" data-i="'+i+'" rows="3" aria-label="解析">'+esc(it.exp)+'</textarea></details></section>';
+    return h;
+  }
+  function essayCard(e,i){
+    var h='';
+    h+='<section class="card stack pq'+(e.sel?'':' off')+'" style="gap:10px"><div class="msg">第 '+e.no+' 題・第 '+e.pg+(e.pgEnd!==e.pg?'–'+e.pgEnd:'')+' 頁</div>'
+        +dupNote(e)
+        +'<label class="chk"><input type="checkbox" data-pf="esel" data-i="'+i+'"'+(e.sel?' checked':'')+'>加入申論題題庫</label>'
+        +'<textarea data-pf="eq" data-i="'+i+'" rows="'+Math.min(10,Math.max(3,Math.ceil(e.q.length/20)))+'" aria-label="題目">'+esc(e.q)+'</textarea>'
+        +'<details><summary>參考答案（'+(e.ans?'有':'無')+'）</summary><textarea data-pf="ea" data-i="'+i+'" rows="6" aria-label="參考答案">'+esc(e.ans)+'</textarea></details>'
+        +'<label class="chk"><input type="checkbox" data-pf="epend" data-i="'+i+'"'+(e.pend?' checked':'')+'>標記為答案待確認</label></section>';
+    return h;
+  }
+  var okI=[],atI=[],okE=[],atE=[];
+  R.items.forEach(function(it,i){(it.status!=='ok'||it.ans===null||it.pend||it.man||it.dupe==='slot'?atI:okI).push(i)});
+  R.essays.forEach(function(e,i){(!String(e.ans||'').trim()||e.pend||e.dupe==='slot'?atE:okE).push(i)});
+  var nAt=atI.length+atE.length,nOk=okI.length+okE.length,unsel=atI.filter(function(i){return !R.items[i].sel}).length;
+  h+='<section class="card stack" style="gap:12px"><h2>確認匯入</h2><p class="msg">共 '+(R.items.length+R.essays.length)+' 題：辨識正常 '+nOk+' 題，需要你看一下 '+nAt+' 題。</p>'
+    +'<p class="msg" id="psum">'+esc(pdfSummaryText())+'</p>'
+    +(R.dupSlot?'<p class="msg" style="color:var(--bad)">疑似重複 '+R.dupSlot+' 題：同一份考卷的同一題號已有題目，已預設不匯入，請在下方確認。</p>':'')
+    +(R.dupText?'<p class="msg">另有 '+R.dupText+' 題與題庫其他年度或來源的題目內容相同，會照常匯入，不會合併。</p>':'')
+    +(unsel?'<p class="msg" style="color:var(--bad)">有 '+unsel+' 題尚未勾選（例如沒有答案），不會被匯入。</p>':'')
+    +'<button class="btn primary" data-act="pdf-import" style="justify-content:center">確認匯入</button>'
+    +'<div class="row"><button class="btn sm" data-act="pdf-selall">全選可匯入</button><button class="btn sm" data-act="pdf-selnone">全不選</button><button class="btn sm" data-act="pdf-cancel">取消，不匯入</button></div></section>';
+  h+=info;
+  if(nAt){
+    h+='<section class="card stack" style="gap:8px"><h2>需要你看一下（'+nAt+'）</h2><p class="msg">答案沒辨識到、題目不完整、待確認，或你手動改過答案的題目。</p></section>';
+    atI.forEach(function(i){h+=itemCard(R.items[i],i)});
+    if(atE.length){h+='<section class="card stack" style="gap:8px"><h2>申論題（需要看一下）</h2><p class="msg">沒有參考答案或標記待確認的申論題。申論題只會加入「申論題」題庫。</p></section>';atE.forEach(function(i){h+=essayCard(R.essays[i],i)})}
+  }
+  if(nOk){
+    h+='<section class="card stack" style="gap:10px"><h2>辨識正常（'+nOk+'）</h2><p class="msg">已勾選，確認匯入時會一起匯入。要抽查可以展開，展開後仍可編輯、取消勾選。</p>'
+      +'<button class="btn sm" data-act="pdf-okopen" style="align-self:flex-start">'+(pdfOkOpen?'收合':'展開檢查')+'</button></section>';
+    if(pdfOkOpen){okI.forEach(function(i){h+=itemCard(R.items[i],i)});okE.forEach(function(i){h+=essayCard(R.essays[i],i)})}
+  }
+  return h;
+}
+function essaysHTML(){
+  var n=(S.essays||[]).length;if(!n)return '';
+  return '<section class="card stack" style="gap:10px"><p class="msg">申論題題庫共 '+n+' 題，已移到「申論題」頁，可以在那裡搜尋、編輯、備份。</p><button class="btn sm" data-act="tab" data-v="essays" style="align-self:flex-start">前往申論題</button></section>';
+}
+
+/* ---------- PDF 動作 ---------- */
+function keepScroll(){var y=window.scrollY;render();window.scrollTo(0,y)}
+function pdfRefreshSummary(){
+  var s=$('#psum');if(s)s.textContent=pdfSummaryText();
+}
+/* 匯入前比對既有題庫：只標示，不刪除、不合併 */
+function pdfMarkDupes(res){
+  res.dupSame=0;res.dupSlot=0;res.dupText=0;
+  if(impMode==='replace'||!S.bank||!S.bank.length)return;
+  var src0=(pdfInfo.src||'').trim()||cleanName(pdfInfo.name),yr=String(pdfInfo.yr||'').trim(),rd=String(pdfInfo.rd||'').trim();
+  var ex0=(/^\d{2,3}$/.test(yr)&&/^\d{1,2}$/.test(rd))?examId(yr,rd,String(pdfInfo.sb||'').trim()):'';
+  var byId={},bySlot={},byKey={};
+  function noOf(q){if(q.no)return String(q.no);var m=/第\s*(\d+)\s*題\s*$/.exec(q.src||'');return m?m[1]:''}
+  S.bank.forEach(function(q){byId[q.id]=q;var n=noOf(q);if(n)bySlot[examOf(q)+'#'+n]=q;byKey[qkey(q)]=q});
+  res.items.forEach(function(it){
+    var q=it.q.trim(),opts=it.opts.map(function(x){return x.trim()}),id='pdf-'+hash(src0+'#'+it.no+'#'+q);
+    delete it.dupe;delete it.dupOf;
+    if(byId[id]){it.dupe='same';res.dupSame++;return}
+    var o=ex0&&bySlot[ex0+'#'+it.no];
+    if(o){it.dupe='slot';it.dupOf=o;it.sel=false;res.dupSlot++;return}
+    if(byKey[qkey({q:q,opts:opts})])res.dupText++;
+  });
+  var eh={};(S.essays||[]).forEach(function(e){eh[e.id]=e});
+  var eslot={};(S.essays||[]).forEach(function(e){if(e.no)eslot[examOf(e)+'#'+e.no]=e});
+  res.essays.forEach(function(e){
+    var id='es-'+hash(src0+'#'+e.no+'#'+(e.q0||e.q));
+    delete e.dupe;delete e.dupOf;
+    if(eh[id]){e.dupe='same';res.dupSame++;return}
+    var o=ex0&&eslot[ex0+'#'+e.no];
+    if(o){e.dupe='slot';e.dupOf=o;e.sel=false;res.dupSlot++}
+  });
+}
+function dupNote(it){
+  if(it.dupe==='same')return '<p class="msg">這題已匯入過（內容完全相同），匯入時會略過，不會新增。</p>';
+  if(it.dupe==='slot'){var o=it.dupOf,t=String(o.q||'').replace(/\s+/g,' ');return '<p class="msg" style="color:var(--bad)">疑似重複：同一份考卷的第 '+esc(it.no)+' 題已有題目「'+esc(t.slice(0,30))+(t.length>30?'…':'')+'」。已預設不匯入，要匯入請自行勾選（原有題目不會被改動）。</p>'}
+  return '';
+}
+function pdfRun(){
+  if(!pdfDoc||pdfBusy)return;
+  pdfBusy='準備中…';pdfRes=null;impMsg='';render();
+  pdfExtract(pdfDoc,function(p,n){pdfBusy='解析中：第 '+p+' / '+n+' 頁';var el=$('#pprog');if(el)el.textContent=pdfBusy}).then(function(r){
+    pdfBusy='';
+    if(r.scanned){impMsg='此 PDF 需要 OCR，目前無法直接解析。這個 PDF 幾乎沒有可擷取的文字（可能是掃描圖片）。';render();return}
+    var res=parseExamLines(r.lines);
+    if(!res.items.length&&!res.essays.length){impMsg='有讀到文字，但沒有辨識到題目。目前支援「1. 題目 (1)選項 (2)選項 … [解：] (答案)」這種格式。';render();return}
+    pdfRes=res;pdfMarkDupes(res);render();window.scrollTo(0,0);
+  },function(err){pdfBusy='';impMsg='解析失敗：'+(err&&err.message?err.message:'未知錯誤');render()});
+}
+function pdfImport(btn){
+  var R=pdfRes,cat0=(pdfInfo.cat||'').trim(),src0=(pdfInfo.src||'').trim()||cleanName(pdfInfo.name);
+  var yr0=String(pdfInfo.yr||'').trim(),rd0=String(pdfInfo.rd||'').trim(),sb0=String(pdfInfo.sb||'').trim();
+  if(!/^\d{2,3}$/.test(yr0)||!/^\d{1,2}$/.test(rd0)){yr0='';rd0=''}
+  var ex0=yr0?examId(yr0,rd0,sb0):'',fill=[];
+  var items=[],bad=0,reasons={},have={},added=0,already=0,sel=0;
+  if(S.bank&&impMode==='add')S.bank.forEach(function(q){have[q.id]=1});
+  R.items.forEach(function(it){
+    if(!it.sel)return;sel++;
+    var opts=it.opts.map(function(x){return x.trim()});
+    while(opts.length&&!opts[opts.length-1])opts.pop();
+    var c=check({id:'pdf-'+hash(src0+'#'+it.no+'#'+it.q.trim()),q:it.q,opts:opts,ans:(it.ans===null?null:it.ans+1),exp:it.exp,cat:cat0,src:src0+' 第'+it.no+'題'});
+    if(!c.ok){bad++;reasons[c.err]=(reasons[c.err]||0)+1;return}
+    if(ex0){c.ok.ex=ex0;c.ok.no=String(it.no);if(it.pg)c.ok.pg=it.pg}
+    if(have[c.ok.uid]){already++;if(ex0)fill.push({id:c.ok.uid||c.ok.id,m:{ex:ex0,no:String(it.no),pg:it.pg}});return}
+    if(it.pend)c.ok.pend=true;
+    items.push(c.ok);
+  });
+  var essaysNew=[],E=S.essays||[],eh={};E.forEach(function(e){eh[e.id]=1});
+  R.essays.forEach(function(e){
+    if(!e.sel)return;
+    var id='es-'+hash(src0+'#'+e.no+'#'+(e.q0||e.q));
+    if(eh[id]){if(ex0)fill.push({e:id,m:{ex:ex0,pg:e.pg}});return}eh[id]=1;
+    var ym=/(\d{2,3})\s*年/.exec(src0),qq=String(e.q).trim(),aa=String(e.ans).trim();
+    if(!qq){bad++;return}
+    essaysNew.push({id:id,no:String(e.no),pg:e.pg,q:qq,ans:aa,exp:'',year:ym?ym[1]+'年':'',src:src0,cat:cat0,pend:!!e.pend||!aa,at:Date.now()});
+    if(ex0)essaysNew[essaysNew.length-1].ex=ex0;
+  });
+  if(!items.length&&!essaysNew.length&&!fill.length){
+    impMsg='沒有可匯入的題目：'+(sel?'勾選的題目都已匯入過或資料不完整。':'請先勾選要匯入的題目。')+'目前題庫沒有改變。';render();return;
+  }
+  var run=function(){
+    var p=plan(items,impMode,true);
+    if(items.length)S.bank=p.list;
+    S.essays=E.concat(essaysNew);
+    var nfill=0;
+    if(fill.length){
+      var bm={},em={};(S.bank||[]).forEach(function(q){bm[q.id]=q});S.essays.forEach(function(x){em[x.id]=x});
+      fill.forEach(function(f){var o=f.e?em[f.e]:bm[f.id];if(!o)return;var ch=false;
+        ['ex','no','pg'].forEach(function(k){if(f.m[k]!=null&&f.m[k]!==''&&(o[k]==null||o[k]==='')){o[k]=f.m[k];ch=true}});
+        if(ch)nfill++});
+    }
+    if(ex0){
+      if(!S.exams)S.exams=[];
+      var xr=S.exams.filter(function(x){return x.id===ex0})[0];
+      if(!xr){xr={id:ex0,year:yr0,round:rd0,subject:sb0,pdfs:[],at:Date.now()};S.exams.push(xr)}
+      if(xr.pdfs.indexOf(pdfInfo.name)<0)xr.pdfs.push(pdfInfo.name);
+    }
+    var ok=save();
+    var note=[];
+    if(already)note.push('已匯入過而略過 '+already+' 題');
+    if(bad)note.push('資料不完整未匯入 '+bad+' 題（'+Object.keys(reasons).map(function(k){return k+' × '+reasons[k]}).join('；')+'）');
+    if(essaysNew.length)note.push('申論題 '+essaysNew.length+' 題已加入申論題題庫');
+    if(ex0)note.push('歸入考卷：'+examName({year:yr0,round:rd0,subject:sb0}));else note.push('沒有填年度與次數，未建立考卷連結（仍會依分類名稱自動歸類）');
+    if(nfill)note.push('補上考卷連結、題號、頁碼 '+nfill+' 題（題目與答案沒有改動）');
+    impReport={file:pdfInfo.name,keep:true,total:sel,added:p.added,dup:0,conflict:0,gs:items.length?p.gs:groupStats(bank()),bad:0,detail:'',count:bank().length,saved:ok,note:note.join('；')};
+    pdfRes=null;pdfInfo=null;if(pdfDoc&&pdfDoc.destroy){try{pdfDoc.destroy()}catch(e){}}pdfDoc=null;
+    impMsg='';cat='';render();window.scrollTo(0,0);
+  };
+  if(impMode==='replace'&&S.bank&&items.length)twice(btn,'replacepdf',run);else run();
+}
+function pdfAct(a,b){
+  var i=+b.dataset.i;
+  if(a==='pdf-run')pdfRun();
+  else if(a==='pdf-cancel'){pdfRes=null;impMsg='';impOpen=false;render();window.scrollTo(0,0)}
+  else if(a==='pdf-selall'){pdfRes.items.forEach(function(it){it.sel=(it.ans!==null&&it.status!=='bad')});pdfRes.essays.forEach(function(e){e.sel=true});keepScroll()}
+  else if(a==='pdf-selnone'){pdfRes.items.forEach(function(it){it.sel=false});pdfRes.essays.forEach(function(e){e.sel=false});keepScroll()}
+  else if(a==='pdf-ans'){var it=pdfRes.items[i];if(it.ans!==+b.dataset.k)it.man=true;it.ans=+b.dataset.k;if(it.status==='bad'&&it.q&&it.opts.filter(Boolean).length>=2)it.status='noans';keepScroll()}
+  else if(a==='pdf-okopen'){pdfOkOpen=!pdfOkOpen;keepScroll()}
+  else if(a==='pdf-import')pdfImport(b);
+}
+document.addEventListener('change',function(e){
+  var t=e.target;if(!t)return;
+  if(t.id==='pf'&&t.files&&t.files[0]){var f=t.files[0];loadPdf(f);t.value='';return}
+  var d=t.dataset&&t.dataset.pf;if(!d||!pdfRes)return;
+  var i=+t.dataset.i;
+  if(d==='sel'){pdfRes.items[i].sel=t.checked;t.closest('.pq').classList.toggle('off',!t.checked);pdfRefreshSummary()}
+  else if(d==='esel'){pdfRes.essays[i].sel=t.checked;t.closest('.pq').classList.toggle('off',!t.checked);pdfRefreshSummary()}
+  else if(d==='pend'){pdfRes.items[i].pend=t.checked}
+  else if(d==='epend'){pdfRes.essays[i].pend=t.checked}
+});
+document.addEventListener('input',function(e){
+  var t=e.target;if(!t)return;
+  if(t.id==='pcat'&&pdfInfo){pdfInfo.cat=t.value;return}
+  if(t.id==='pyr'&&pdfInfo){pdfInfo.yr=t.value;return}
+  if(t.id==='prd'&&pdfInfo){pdfInfo.rd=t.value;return}
+  if(t.id==='psb'&&pdfInfo){pdfInfo.sb=t.value;return}
+  if(t.id==='psrc'&&pdfInfo){pdfInfo.src=t.value;return}
+  var d=t.dataset&&t.dataset.pf;if(!d||!pdfRes)return;
+  if(d==='eq'||d==='ea'){var es=pdfRes.essays[+t.dataset.i];if(es){if(d==='eq')es.q=t.value;else es.ans=t.value}return}
+  var it=pdfRes.items[+t.dataset.i];if(!it)return;
+  if(d==='q')it.q=t.value;else if(d==='o')it.opts[+t.dataset.k]=t.value;else if(d==='exp')it.exp=t.value;
+});
+
+/* ---------- 年度考卷 ---------- */
+/* 舊題目不改寫：由原本的分類字串推算所屬考卷；新匯入的題目另外存 ex（考卷 ID）、no（題號）、pg（頁碼）。 */
+var impOpen=false,lastRep=null,exF='',exv='',exfY='',exfR='',exfS='',esEx='',ep=null;
+var esfY='',esfS='',esBkOpen=false,esShow=200;  /* 申論題頁篩選（只存在記憶體，不寫入資料）：年度 / 科目；考卷沿用 esEx */
+function parseExamCat(c){
+  c=String(c||'');var m;
+  m=/(\d{2,3})\s*年度?\s*第\s*(\d+)\s*次\s*[－\-—:：\s]*(.*)$/.exec(c);
+  if(m)return {year:m[1],round:m[2],subject:m[3].trim()};
+  m=/^(.*?)(\d{2,3})\s*年\s*[\(（]\s*(\d+)\s*[\)）]\s*(.*)$/.exec(c);
+  if(m)return {year:m[2],round:m[3],subject:(m[1]+m[4]).trim()};
+  return null;
+}
+function examId(y,r,s){return 'ex-'+y+'-'+r+'-'+hash(String(s||''))}
+function examOf(o){
+  if(o&&o.ex)return o.ex;
+  var p=parseExamCat(o&&o.cat);
+  return p?examId(p.year,p.round,p.subject):'ex-misc';
+}
+function examName(m){return m.year?(m.year+'年度第'+m.round+'次'+(m.subject?' '+m.subject:'')):'未歸屬考卷'}
+function examList(){
+  var reg={},map={},order=[];
+  (S.exams||[]).forEach(function(e){reg[e.id]=e});
+  function get(o){
+    var id=examOf(o);
+    if(!map[id]){
+      var r=reg[id],p=parseExamCat(o.cat)||{};
+      var m={id:id,year:r?r.year:(p.year||''),round:r?r.round:(p.round||''),subject:r?r.subject:(p.subject||''),pdfs:(r&&r.pdfs)?r.pdfs.slice():[],mcq:[],ess:[]};
+      if(id==='ex-misc'){m.year='';m.round='';m.subject=''}
+      m.name=examName(m);map[id]=m;order.push(id);
+    }
+    return map[id];
+  }
+  (S.bank||[]).forEach(function(q){get(q).mcq.push(q)});
+  (S.essays||[]).forEach(function(e){get(e).ess.push(e)});
+  var L=order.map(function(id){return map[id]});
+  L.sort(function(a,b){
+    if(!a.year!==!b.year)return a.year?-1:1;
+    return (b.year-a.year)||(b.round-a.round)||(a.name<b.name?-1:1);
+  });
+  return L;
+}
+function examById(id){var L=examList();for(var i=0;i<L.length;i++)if(L[i].id===id)return L[i];return null}
+function examSource(m){
+  if(m.pdfs.length)return m.pdfs.join('、');
+  if(m.mcq.some(function(q){return /^Excel/.test(q.src||'')}))return 'Excel 題庫匯入';
+  if(m.mcq.concat(m.ess).some(function(q){return /^(pdf|es)-/.test(q.id||'')}))return 'PDF 匯入（檔名未記錄，重新匯入同一份 PDF 可補上）';
+  return '未記錄';
+}
+function uniq(a){var s={},o=[];a.forEach(function(x){if(x!==''&&!s[x]){s[x]=1;o.push(x)}});return o}
+function selHTML(key,label,vals,cur,allText){
+  return '<div class="setrow"><label for="xf-'+key+'">'+label+'</label><select id="xf-'+key+'" data-xf="'+key+'"><option value="">'+allText+'</option>'
+    +vals.map(function(v){return '<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(v)+'</option>'}).join('')+'</select></div>';
+}
+function examsViewHTML(){
+  var L=examList(),nM=0,nE=0;
+  L.forEach(function(m){nM+=m.mcq.length;nE+=m.ess.length});
+  var F=L.filter(function(m){return (!exfY||m.year===exfY)&&(!exfR||m.round===exfR)&&(!exfS||m.subject===exfS)});
+  var h='<div class="stack"><header><h1>考卷</h1><p class="sub">共 '+L.length+' 份考卷・選擇題 '+nM+' 題・申論題 '+nE+' 題</p></header>';
+  if(!L.length)return h+'<div class="empty">還沒有考卷。<br>到「題庫」頁匯入題目或 PDF 後，會依年度與次數歸入考卷。</div></div>';
+  var yrs=uniq(L.map(function(m){return m.year})).sort(function(a,b){return b-a});
+  var rds=uniq(L.map(function(m){return m.round})).sort(function(a,b){return a-b});
+  var sbs=uniq(L.map(function(m){return m.subject}));
+  h+=selHTML('y','年度',yrs,exfY,'全部年度')+selHTML('r','考試次數',rds,exfR,'全部次數')+selHTML('s','科目或分類',sbs,exfS,'全部科目');
+  if(exfY||exfR||exfS)h+='<button class="btn sm" data-act="exam-fclear" style="align-self:flex-start">清除篩選</button>';
+  h+='<p class="msg">'+(F.length===L.length?'共 '+L.length+' 份':'符合 '+F.length+' 份，共 '+L.length+' 份')+'</p>';
+  if(!F.length)return h+'<div class="empty">沒有符合條件的考卷。</div></div>';
+  F.forEach(function(m){
+    h+='<section class="card stack" style="gap:12px"><div><div class="etitle">'+esc(m.name)+'</div>'
+      +'<p class="msg" style="margin:4px 0 0">'+(m.year?'年度 '+esc(m.year)+'・第 '+esc(m.round)+' 次'+(m.subject?'・'+esc(m.subject):''):'沒有年度資料的題目')+'</p></div>'
+      +'<div class="band two"><div><b>'+m.mcq.length+'</b><span>選擇題</span></div><div><b>'+m.ess.length+'</b><span>申論題</span></div></div>'
+      +'<p class="msg">PDF 來源：'+esc(examSource(m))+'</p>'
+      +'<button class="btn primary" data-act="exam-mcq" data-id="'+esc(m.id)+'"'+(m.mcq.length?'':' disabled')+'>練習選擇題<small>'+m.mcq.length+' 題</small></button>'
+      +'<button class="btn" data-act="exam-ess" data-id="'+esc(m.id)+'" data-back="exams"'+(m.ess.length?'':' disabled')+'>練習申論題<small>'+m.ess.length+' 題</small></button>'
+      +'<button class="btn sm" data-act="exam-open" data-id="'+esc(m.id)+'" style="align-self:flex-start">查看題目與頁碼</button></section>';
+  });
+  return h+'</div>';
+}
+function examItemsHTML(list,kind){
+  if(!list.length)return '<p class="msg">這份考卷沒有'+kind+'。</p>';
+  return '<ol class="qlist">'+list.slice(0,200).map(function(q,i){
+    var f=kind==='選擇題'?flagOf(q):(q.pend?{conf:true}:null);
+    return '<li><span class="n">'+esc(q.no||i+1)+'</span><span>'+(f?(f.conf?'［答案待確認］':'［重複題］'):'')+(q.pg?'［p.'+esc(q.pg)+'］':'')+esc(q.q)+'</span></li>';
+  }).join('')+'</ol>'+(list.length>200?'<p class="sub">只顯示前 200 題。</p>':'');
+}
+function examDetailHTML(){
+  var m=examById(exv);if(!m){exv='';return examsViewHTML()}
+  var noPg=m.mcq.some(function(q){return !q.pg&&!/^Excel/.test(q.src||'')});
+  return '<div class="stack"><button class="btn sm" data-act="exam-back" style="align-self:flex-start">← 考卷列表</button>'
+    +'<header><h1 style="font-size:24px">'+esc(m.name)+'</h1><p class="sub">'+(m.year?'年度 '+esc(m.year)+'・第 '+esc(m.round)+' 次':'')+'</p></header>'
+    +'<div class="band two"><div><b>'+m.mcq.length+'</b><span>選擇題</span></div><div><b>'+m.ess.length+'</b><span>申論題</span></div></div>'
+    +'<p class="msg">PDF 來源：'+esc(examSource(m))+'</p>'
+    +'<button class="btn primary" data-act="exam-mcq" data-id="'+esc(m.id)+'"'+(m.mcq.length?'':' disabled')+'>練習選擇題<small>'+m.mcq.length+' 題</small></button>'
+    +'<button class="btn" data-act="exam-ess" data-id="'+esc(m.id)+'" data-back="exam"'+(m.ess.length?'':' disabled')+'>練習申論題<small>'+m.ess.length+' 題</small></button>'
+    +'<section class="card stack" style="gap:8px"><h2>選擇題（依原始順序）</h2>'+examItemsHTML(m.mcq,'選擇題')+(noPg?'<p class="sub">較早匯入的題目沒有頁碼。重新匯入同一份 PDF，可以補上題號、頁碼和考卷連結，題目與答案不會被改動。</p>':'')+'</section>'
+    +'<section class="card stack" style="gap:8px"><h2>申論題（依原始順序）</h2>'+examItemsHTML(m.ess,'申論題')+'</section></div>';
+}
+function examAct(a,b){
+  var id=b.dataset.id;
+  if(a==='exam-open'){exv=id;go('exam')}
+  else if(a==='exam-back'){go('exams')}
+  else if(a==='exam-mcq'){exF=id;cat='';go('home')}
+  else if(a==='exam-clear'){exF='';render()}
+  else if(a==='exam-ess'){epStart(id,b.dataset.back||'exams')}
+  else if(a==='exam-fclear'){exfY='';exfR='';exfS='';render()}
+}
+
+/* ---------- 申論題逐題練習（自行作答，不自動評分）---------- */
+function essayById(id){var E=S.essays||[];for(var i=0;i<E.length;i++)if(E[i].id===id)return E[i];return null}
+function epStart(scope,back){
+  var L=Array.isArray(scope)?scope.map(function(id){return essayById(id)}).filter(Boolean):(S.essays||[]).filter(function(e){return !scope||examOf(e)===scope});
+  if(!L.length){toast('沒有可練習的申論題');return}
+  ep={ids:L.map(function(e){return e.id}),i:0,shown:false,scope:scope,back:back||'essays'};
+  go('epractice');
+}
+function epFlush(){clearTimeout(epFlush.t);save()}
+function epHTML(){
+  var e=essayById(ep.ids[ep.i]);
+  if(!e)return '<div class="empty">找不到這題。</div>';
+  var n=ep.ids.length,mine=(S.eans&&S.eans[e.id]&&S.eans[e.id].t)||'',mk=(S.emark||{})[e.id],m=examById(examOf(e));
+  var h='<div class="stack" style="gap:16px"><div><div class="qtop"><button class="x" data-act="ep-exit" aria-label="離開">✕</button><span class="cnt">'+(ep.i+1)+' / '+n+'</span></div>'
+    +'<div class="bar"><i style="width:'+((ep.i+(ep.shown?1:0))/n*100)+'%"></i></div></div>'
+    +'<div class="card"><p class="msg" style="margin:0 0 8px">'+esc(m?m.name:'')+(e.no?'・第 '+esc(e.no)+' 題':'')+(e.pg?'・p.'+esc(e.pg):'')+'</p>'
+    +(e.pend?'<span class="tag bad">答案待確認</span>':'')+'<p class="qtext pre" style="margin:0">'+esc(e.q)+'</p>'+imgsHTML(e.id,'q')+'</div>'
+    +'<div class="setrow"><label for="epa">我的作答（自動儲存在這支手機）</label><textarea id="epa" style="min-height:200px">'+esc(mine)+'</textarea></div>';
+  if(!ep.shown)return h+'<button class="btn" data-act="ep-show" style="justify-content:center">顯示參考答案</button></div>';
+  h+='<div class="exp"><b>參考答案</b><span class="pre">'+(e.ans?esc(e.ans):'（尚無參考答案）')+'</span>'+imgsHTML(e.id,'a')+'</div>'
+    +(e.exp?'<div class="exp"><b>解析</b><span class="pre">'+esc(e.exp)+'</span></div>':'')
+    +(e.pend?'<div class="note">這題的參考答案還沒有核對，請對照原始解答。</div>':'')
+    +'<div class="setrow"><label>自我評估（選填，不計分）</label><div class="seg"><button data-act="ep-mark" data-v="ok" class="'+(mk==='ok'?'on':'')+'">我掌握了</button><button data-act="ep-mark" data-v="review" class="'+(mk==='review'?'on':'')+'">需要複習</button></div></div>';
+  return h+'</div>';
+}
+function epDock(){
+  var last=ep.i===ep.ids.length-1;
+  return '<div class="dockin"><button class="btn" data-act="ep-prev"'+(ep.i===0?' disabled':'')+'>上一題</button>'
+    +(last?'<button class="btn primary" data-act="ep-finish">完成</button>':'<button class="btn primary" data-act="ep-next">下一題</button>')+'</div>';
+}
+function epAct(a,b){
+  if(!ep)return;
+  if(a==='ep-show'){ep.shown=true;keepScroll()}
+  else if(a==='ep-next'||a==='ep-prev'){epFlush();ep.i+=(a==='ep-next'?1:-1);ep.shown=false;render();window.scrollTo(0,0)}
+  else if(a==='ep-mark'){
+    var id=ep.ids[ep.i];if(!S.emark)S.emark={};
+    if(S.emark[id]===b.dataset.v)delete S.emark[id];else S.emark[id]=b.dataset.v;
+    save();keepScroll();
+  }
+  else if(a==='ep-exit'||a==='ep-finish'){epFlush();var back=ep.back;ep=null;go(back)}
+}
+document.addEventListener('input',function(e){
+  var t=e.target;if(!t||t.id!=='epa'||!ep)return;
+  var id=ep.ids[ep.i];if(!S.eans)S.eans={};
+  S.eans[id]={t:t.value,at:Date.now()};
+  clearTimeout(epFlush.t);epFlush.t=setTimeout(save,600);
+});
+document.addEventListener('change',function(e){
+  var t=e.target;if(!t)return;
+  if(t.dataset&&t.dataset.xf){var k=t.dataset.xf;if(k==='y')exfY=t.value;else if(k==='r')exfR=t.value;else exfS=t.value;render();return}
+  if(t.id==='eex'){esEx=t.value;esShow=200;render()}
+  else if(t.id==='esfy'){esfY=t.value;esShow=200;render()}
+  else if(t.id==='esfs'){esfS=t.value;esShow=200;render()}
+});
+
+/* ---------- 申論題題庫 ---------- */
+var esQ='',esEdit=null,esMsg='',esOut='',esBack='';
+/* 舊資料（PDF 暫存區）只補欄位，不刪任何原有欄位 */
+function normEssay(e){
+  e=(e&&typeof e==='object')?e:{};
+  var r=Object.assign({},e);
+  ['q','ans','exp','year','src','cat'].forEach(function(k){r[k]=(r[k]==null)?'':String(r[k])});
+  r.no=(r.no==null)?'':String(r.no);
+  r.pend=(e.pend===undefined)?!r.ans.trim():!!e.pend;
+  if(!r.year){var m=/(\d{2,3})\s*年/.exec(r.src);r.year=m?m[1]+'年':''}
+  r.id=r.id?String(r.id):'es-'+hash(r.src+'#'+r.no+'#'+r.q);
+  return r;
+}
+function essayPendCount(){return (S.essays||[]).filter(function(e){return e.pend}).length}
+function essayMatch(e,q){
+  q=q.trim().toLowerCase();if(!q)return true;
+  return [e.no,e.q,e.ans,e.exp,e.year,e.src,e.cat].join('\n').toLowerCase().indexOf(q)>=0;
+}
+function essayCardHTML(e){
+  var meta=[e.year,e.src].filter(Boolean).join('・'),mk=(S.emark||{})[e.id],my=S.eans&&S.eans[e.id]&&String(S.eans[e.id].t||'').trim();
+  return '<section class="card stack" style="gap:10px">'
+    +'<div class="row" style="align-items:center;justify-content:space-between;gap:8px"><span class="msg">'+esc(meta||'未標來源')+(e.no?'・第 '+esc(e.no)+' 題':'')+(e.pg?'・p.'+esc(e.pg):'')+'</span>'
+    +'<span>'+(e.pend?'<span class="tag bad">答案待確認</span>':'')+(mk==='review'?'<span class="tag warn">需複習</span>':mk==='ok'?'<span class="tag">已掌握</span>':my?'<span class="tag">已作答</span>':'')+'</span></div>'
+    +'<p class="pre" style="margin:0;font-size:16px;line-height:1.7">'+esc(e.q)+'</p>'+imgsHTML(e.id,'q')
+    +'<details><summary>參考答案</summary><p class="pre" style="margin:4px 0 0">'+(e.ans?esc(e.ans):'（尚無參考答案）')+'</p>'+imgsHTML(e.id,'a')+'</details>'
+    +(e.exp?'<details><summary>解析</summary><p class="pre" style="margin:4px 0 0">'+esc(e.exp)+'</p></details>':'')
+    +'<div class="row"><button class="btn sm" data-act="essay-edit" data-id="'+esc(e.id)+'">編輯</button><button class="btn sm" data-act="essay-del" data-id="'+esc(e.id)+'">刪除</button></div></section>';
+}
+/* ---- 申論題頁：年度 → 科目 → 考卷 分層篩選（選項全由現有資料產生；年度／科目缺少時歸入未歸屬，不推測）---- */
+function esfYK(m){return m.year?String(m.year):'__none'}
+function esfSK(m){return m.subject?m.subject:'__nosub'}
+function esfModel(){
+  var L=examList().filter(function(m){return m.ess.length}),all={};
+  examList().forEach(function(m){all[m.id]=m});
+  var years=uniq(L.map(esfYK)).sort(function(a,b){return a==='__none'?1:b==='__none'?-1:b-a});
+  if(esfY&&years.indexOf(esfY)<0)esfY='';
+  var LY=L.filter(function(m){return !esfY||esfYK(m)===esfY});
+  var subs=uniq(LY.map(esfSK)).sort(function(a,b){return a==='__nosub'?1:b==='__nosub'?-1:(a<b?-1:1)});
+  if(esfS&&subs.indexOf(esfS)<0)esfS='';
+  var LX=LY.filter(function(m){return !esfS||esfSK(m)===esfS}).sort(function(a,b){return (b.year-a.year)||(a.round-b.round)||(a.name<b.name?-1:1)});
+  if(esEx&&!LX.some(function(m){return m.id===esEx}))esEx='';
+  function n(arr){var t=0;arr.forEach(function(m){t+=m.ess.length});return t}
+  return {all:all,years:years,subs:subs,exams:LX,
+    ny:function(y){return n(L.filter(function(m){return esfYK(m)===y}))},
+    ns:function(sv){return n(LY.filter(function(m){return esfSK(m)===sv}))}};
+}
+function esfActive(){return !!(esfY||esfS||esEx||esQ.trim())}
+function essayFiltered(){
+  var M=esfModel();
+  return (S.essays||[]).filter(function(e){
+    var m=M.all[examOf(e)];if(!m)return !esfY&&!esfS&&!esEx&&essayMatch(e,esQ);
+    return (!esfY||esfYK(m)===esfY)&&(!esfS||esfSK(m)===esfS)&&(!esEx||m.id===esEx)&&essayMatch(e,esQ);
+  });
+}
+function esfSel(id,label,val,opts,allLabel){
+  return '<div class="setrow"><label for="'+id+'">'+label+'</label><select id="'+id+'"><option value="">'+allLabel+'</option>'
+    +opts.map(function(o){return '<option value="'+esc(o[0])+'"'+(val===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'}).join('')+'</select></div>';
+}
+function esfHTML(){
+  var M=esfModel();
+  var yo=M.years.map(function(y){return [y,(y==='__none'?'未歸屬（無年度）':y+' 年度')+'（'+M.ny(y)+'）']});
+  var so=M.subs.map(function(sv){return [sv,(sv==='__nosub'?'（未標科目）':sv)+'（'+M.ns(sv)+'）']});
+  var xo=M.exams.map(function(m){
+    var p=[];
+    if(!m.year)p.push('未歸屬考卷');
+    else{if(!esfY)p.push(m.year+' 年度');p.push(m.round?'第 '+m.round+' 次':'（未標次數）')}
+    if(!esfS&&m.subject)p.push(m.subject);
+    return [m.id,p.join(' ')+'（'+m.ess.length+'）'];
+  });
+  return esfSel('esfy','年度',esfY,yo,'全部年度')+esfSel('esfs','科目',esfS,so,'全部科目')+esfSel('eex','考卷',esEx,xo,'全部考卷')
+    +(esfY||esfS||esEx?'<button class="btn sm" data-act="essay-fclear" style="align-self:flex-start">清除篩選</button>':'');
+}
+function esPracInner(){
+  var n=essayFiltered().length;
+  if(!n)return '<button class="btn primary" disabled>逐題練習<small>0 題</small></button><p class="msg" style="margin:4px 0 0">沒有符合條件的題目，無法練習。</p>';
+  return '<button class="btn primary" data-act="essay-practice">逐題練習<small>'+n+' 題</small></button>';
+}
+function essayListHTML(){
+  var E=S.essays||[];
+  if(!E.length)return '<div class="empty">還沒有申論題。<br>可以按「匯入申論題」匯入 JSON 檔，按「新增申論題」手動輸入，或到「題庫」頁從 PDF 匯入。</div>';
+  var L=essayFiltered();
+  if(!L.length)return '<div class="empty">'+(esQ.trim()?'找不到符合目前篩選與「'+esc(esQ.trim())+'」的申論題。':'沒有符合目前篩選的申論題。')+'</div>';
+  var show=L.slice(0,esShow);
+  return '<p class="msg">'+(esfActive()?'符合 '+L.length+' 題，':'')+'共 '+E.length+' 題'+(L.length>show.length?'（目前顯示 '+show.length+' 題）':'')+'</p>'+show.map(essayCardHTML).join('')
+    +(L.length>show.length?'<button class="btn" data-act="essay-more" style="justify-content:center">再顯示 '+Math.min(200,L.length-show.length)+' 題</button>':'');
+}
+function essayFormHTML(){
+  var d=esEdit.data,isNew=!esEdit.id;
+  return '<section class="card stack" style="gap:12px"><h2>'+(isNew?'新增申論題':'編輯申論題')+'</h2>'
+    +'<div class="setrow"><label for="ef-no">題目編號</label><input type="text" id="ef-no" data-ef="no" value="'+esc(d.no)+'"></div>'
+    +'<div class="setrow"><label for="ef-q">題目內容</label><textarea id="ef-q" data-ef="q" rows="6">'+esc(d.q)+'</textarea></div>'
+    +'<div class="setrow"><label for="ef-ans">參考答案</label><textarea id="ef-ans" data-ef="ans" rows="6">'+esc(d.ans)+'</textarea></div>'
+    +'<div class="setrow"><label for="ef-exp">解析</label><textarea id="ef-exp" data-ef="exp" rows="4">'+esc(d.exp)+'</textarea></div>'
+    +'<div class="setrow"><label for="ef-ex">所屬考卷</label><select id="ef-ex" data-ef="ex"><option value="">依分類自動判斷</option>'+examList().filter(function(m){return m.id!=='ex-misc'}).map(function(m){return '<option value="'+esc(m.id)+'"'+(d.ex===m.id?' selected':'')+'>'+esc(m.name)+'</option>'}).join('')+'</select></div>'
+    +'<div class="setrow"><label for="ef-year">年度</label><input type="text" id="ef-year" data-ef="year" value="'+esc(d.year)+'"></div>'
+    +'<div class="setrow"><label for="ef-src">來源</label><input type="text" id="ef-src" data-ef="src" value="'+esc(d.src)+'"></div>'
+    +'<label class="chk"><input type="checkbox" data-ef="pend"'+(d.pend?' checked':'')+'>答案待確認</label>'
+    +'<button class="btn primary" data-act="essay-save" style="justify-content:center">儲存</button>'
+    +'<button class="btn sm" data-act="essay-cancel" style="align-self:flex-start">取消</button></section>';
+}
+function essaysViewHTML(){
+  var E=S.essays||[],m=esMsg;esMsg='';
+  var h='<div class="stack"><header><h1>申論題</h1><p class="sub">共 '+E.length+' 題・答案待確認 '+essayPendCount()+' 題</p></header>';
+  if(m)h+='<div class="note">'+esc(m)+'</div>';
+  esiCheck();
+  if(esI&&esI.open)return h+esiHTML()+'</div>';
+  h+=esiCards();
+  if(esEdit)return h+essayFormHTML()+'</div>';
+  h+='<button class="btn primary" data-act="esi-open" style="justify-content:center">匯入申論題</button>'
+    +'<button class="btn" data-act="essay-new" style="justify-content:center">新增申論題</button>'
+    +'<button class="btn" data-act="essay-bk-toggle" aria-expanded="'+esBkOpen+'"><span>備份與還原</span><small>'+(esBkOpen?'收合 ▲':'展開 ▼')+'</small></button>';
+  if(esBkOpen)h+='<section class="card stack" style="gap:12px"><h2>備份與還原</h2>'
+    +'<p class="sub" style="margin:0">申論題可以單獨備份。這個頁面不能直接下載檔案，請複製備份文字，貼到「備忘錄」或「檔案」App 保存。還原只會加入沒有的題目，不會覆蓋或刪除現有申論題。要匯入題目檔，請用上方的「匯入申論題」。</p>'
+    +'<button class="btn" data-act="essay-export" style="justify-content:center"'+(E.length?'':' disabled')+'>複製申論題備份（'+E.length+' 題）</button>'
+    +'<button class="btn sm" data-act="essay-show" style="align-self:flex-start"'+(E.length?'':' disabled')+'>顯示備份文字</button>'
+    +(esOut?'<textarea id="eout" readonly style="min-height:140px">'+esc(esOut)+'</textarea>':'')
+    +'<input type="file" id="ef" class="vh" accept=".json,.txt,application/json,text/plain"><label class="btn" for="ef" style="justify-content:center">選擇備份檔還原</label>'
+    +'<textarea id="ein" placeholder="或把備份文字貼在這裡" style="min-height:100px">'+esc(esBack)+'</textarea>'
+    +'<button class="btn" data-act="essay-restore" style="justify-content:center">還原貼上的備份</button></section>';
+  h+=esfHTML()
+    +'<div class="setrow"><label for="eq">搜尋</label><input type="text" id="eq" enterkeyhint="search" placeholder="題目、答案、年度、來源" value="'+esc(esQ)+'"></div>'
+    +'<div id="esprac" class="stack" style="gap:4px">'+esPracInner()+'</div>'
+    +'<div class="stack" id="elist" style="gap:12px">'+essayListHTML()+'</div></div>';
+  return h;
+}
+function essayBackupText(){
+  return JSON.stringify({format:'exam-bank-essays',version:1,exported:new Date().toISOString(),count:(S.essays||[]).length,essays:S.essays||[],exams:S.exams||[],answers:S.eans||{},marks:S.emark||{}},null,1);
+}
+function essayRestore(text,label){
+  var j,arr,bad=0,add=0,have=0;
+  text=String(text||'').trim();
+  if(!text){esMsg='沒有內容可還原。';render();return}
+  try{j=JSON.parse(text)}catch(e){esMsg='備份格式錯誤：'+e.message+'。現有申論題沒有改變。';render();return}
+  arr=Array.isArray(j)?j:(j&&Array.isArray(j.essays)?j.essays:null);
+  if(!arr){esMsg='這不是申論題備份（找不到 essays 清單）。現有申論題沒有改變。';render();return}
+  var ids={};(S.essays||[]).forEach(function(e){ids[e.id]=1});
+  var next=(S.essays||[]).slice();
+  arr.forEach(function(raw){
+    if(!raw||typeof raw!=='object'||!String(raw.q==null?'':raw.q).trim()){bad++;return}
+    var e=normEssay(raw);
+    if(ids[e.id]){have++;return}
+    ids[e.id]=1;next.push(e);add++;
+  });
+  var xa=0;
+  if(j&&!Array.isArray(j)){
+    if(Array.isArray(j.exams)){var xi={};(S.exams||[]).forEach(function(x){xi[x.id]=1});j.exams.forEach(function(x){if(x&&x.id&&!xi[x.id]){S.exams.push(x);xi[x.id]=1}})}
+    if(j.answers&&typeof j.answers==='object')Object.keys(j.answers).forEach(function(k){if(!S.eans[k]&&j.answers[k]&&ids[k]){S.eans[k]=j.answers[k];xa++}});
+    if(j.marks&&typeof j.marks==='object')Object.keys(j.marks).forEach(function(k){if(!S.emark[k]&&ids[k])S.emark[k]=j.marks[k]});
+  }
+  S.essays=next;var ok=save();
+  esBack='';
+  esMsg=(label?label+'：':'')+'讀到 '+arr.length+' 題，新增 '+add+' 題，已存在略過 '+have+' 題，格式錯誤 '+bad+' 題。'+(xa?'還原作答 '+xa+' 筆。':'')+(ok?'':'（瀏覽器沒有允許儲存，關閉頁面後會消失）');
+  render();
+}
+function essaySave(){
+  var d=esEdit.data;
+  if(!String(d.q).trim()){esMsg='請輸入題目內容。';render();return}
+  var out={no:String(d.no).trim(),q:String(d.q).trim(),ans:String(d.ans).trim(),exp:String(d.exp).trim(),year:String(d.year).trim(),src:String(d.src).trim(),pend:!!d.pend,ex:String(d.ex||'')};
+  var autoPend=false;
+  if(!out.ans&&!out.pend){out.pend=true;autoPend=true}
+  if(esEdit.id){
+    var i=S.essays.findIndex(function(e){return e.id===esEdit.id});
+    if(i<0){esMsg='找不到這題，可能已被刪除。';esEdit=null;render();return}
+    S.essays[i]=Object.assign({},S.essays[i],out,{upd:Date.now()});
+  }else{
+    out.id='em-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);out.cat='';out.at=Date.now();
+    S.essays.push(out);
+  }
+  var ok=save();
+  esEdit=null;esMsg='已儲存。'+(autoPend?'沒有參考答案，已標記為答案待確認。':'')+(ok?'':'（瀏覽器沒有允許儲存，關閉頁面後會消失）');
+  render();window.scrollTo(0,0);
+}
+function essayAct(a,b){
+  var id=b.dataset.id;
+  if(a==='essay-bk-toggle'){esBkOpen=!esBkOpen;render()}
+  else if(a==='essay-fclear'){esfY='';esfS='';esEx='';esQ='';esShow=200;render()}
+  else if(a==='essay-more'){esShow+=200;var l2=$('#elist');if(l2)l2.innerHTML=essayListHTML()}
+  else if(a==='essay-practice'){var ids=essayFiltered().map(function(e){return e.id});if(!ids.length){toast('沒有符合條件的題目');return}epStart(ids,'essays')}
+  else if(a==='essay-new'){esEdit={id:null,data:{no:'',q:'',ans:'',exp:'',year:'',src:'',pend:false,ex:esEx}};render();window.scrollTo(0,0)}
+  else if(a==='essay-edit'){
+    var e=S.essays.filter(function(x){return x.id===id})[0];if(!e)return;
+    esEdit={id:id,data:{no:e.no,q:e.q,ans:e.ans,exp:e.exp,year:e.year,src:e.src,pend:!!e.pend,ex:e.ex||''}};render();window.scrollTo(0,0);
+  }
+  else if(a==='essay-cancel'){esEdit=null;render();window.scrollTo(0,0)}
+  else if(a==='essay-save')essaySave();
+  else if(a==='essay-del'){
+    twice(b,'esdel-'+id,function(){
+      S.essays=S.essays.filter(function(x){return x.id!==id});if(S.eans)delete S.eans[id];if(S.emark)delete S.emark[id];
+      var ok=save();esMsg='已刪除 1 題。'+(ok?'':'（瀏覽器沒有允許儲存）');render();
+    });
+  }
+  else if(a==='essay-export'){
+    var t=essayBackupText(),done=function(){esOut='';esMsg='已複製 '+S.essays.length+' 題申論題備份。請貼到「備忘錄」或「檔案」App 保存。';render()},
+    fail=function(){esOut=t;esMsg='無法自動複製，請長按下方備份文字全選後複製。';render();var x=$('#eout');if(x){x.focus();x.select()}};
+    var p=navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject();
+    p.then(done,fail);
+  }
+  else if(a==='essay-show'){esOut=essayBackupText();render();var x=$('#eout');if(x){x.focus();x.select()}}
+  else if(a==='essay-restore')essayRestore(esBack,'貼上的備份');
+}
+document.addEventListener('input',function(e){
+  var t=e.target;if(!t)return;
+  if(t.id==='eq'){esQ=t.value;esShow=200;var l=$('#elist');if(l)l.innerHTML=essayListHTML();var pc=$('#esprac');if(pc)pc.innerHTML=esPracInner();return}
+  if(t.id==='ein'){esBack=t.value;return}
+  if(t.dataset&&t.dataset.ef&&esEdit&&t.type!=='checkbox')esEdit.data[t.dataset.ef]=t.value;
+});
+document.addEventListener('change',function(e){
+  var t=e.target;if(!t)return;
+  if(t.id==='ef'&&t.files&&t.files[0]){
+    var f=t.files[0],fr=new FileReader();t.value='';
+    fr.onload=function(){essayRestore(fr.result,f.name)};
+    fr.onerror=function(){esMsg='無法讀取檔案，請重新選擇。';render()};
+    fr.readAsText(f,'UTF-8');return;
+  }
+  if(t.dataset&&t.dataset.ef==='pend'&&esEdit)esEdit.data.pend=t.checked;
+});
+
+/* ---------- events ---------- */
+document.addEventListener('input',function(e){if(e.target.id==='imp')impText=e.target.value});
+document.addEventListener('change',function(e){var t=e.target;if(t&&t.id==='jf'&&t.files&&t.files[0]){var f=t.files[0];onFile(f);t.value=''}});
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var a=b.dataset.act;
+  if(a.indexOf('img-')===0||a.indexOf('im-')===0){imAct(a,b);return}
+  if(a.indexOf('pdf-')===0){pdfAct(a,b);return}
+  if(a.indexOf('esi-')===0){esiAct(a,b);return}
+  if(a.indexOf('essay-')===0){essayAct(a,b);return}
+  if(a.indexOf('exam-')===0){examAct(a,b);return}
+  if(a.indexOf('hm-')===0){hmAct(a,b);return}
+  if(a.indexOf('bk-')===0||a.indexOf('guard-')===0){bkAct(a,b);return}
+  if(a.indexOf('ep-')===0){epAct(a,b);return}
+  if(a==='imp-toggle'){impOpen=!impOpen;render()}
+  else if(a==='tab'){go(b.dataset.v)}
+  else if(a==='cat'){cat=(cat===b.dataset.v)?'':b.dataset.v;render()}
+  else if(a==='set'){
+    var k=b.dataset.key,v=b.dataset.val;
+    if(k==='impMode')impMode=v;
+    else if(k==='keepAll')keepAll=(v==='1');
+    else{S.settings[k]=k==='shuffle'?v==='1':k==='examN'?Number(v):v;save()}
+    render();
+  }
+  else if(a==='start'){start(b.dataset.mode)}
+  else if(a==='pick'){
+    var i=sess.i,q=sess.list[i],kk=Number(b.dataset.k);
+    if(sess.mode!=='exam'){if(sess.sel[i]!==null)return;sess.sel[i]=kk;rec(q,kk===q.ans)}
+    else sess.sel[i]=kk;
+    render();
+  }
+  else if(a==='next'){sess.i++;render();window.scrollTo(0,0)}
+  else if(a==='prev'){sess.i--;render();window.scrollTo(0,0)}
+  else if(a==='finish'){finish()}
+  else if(a==='exit'){sess.confirmExit=true;render()}
+  else if(a==='exit-no'){sess.confirmExit=false;render()}
+  else if(a==='exit-yes'){sess=null;go('home')}
+  else if(a==='import'){var r0=parseInput(impText);r0.file='貼上文字';if(r0.fatal){impMsg=r0.fatal;impReport=null;render();return}pending=null;applyImport(r0,b,true)}
+  else if(a==='import-file'){applyImport(pending,b,false)}
+  else if(a==='import-cancel'){pending=null;impOpen=false;render()}
+  else if(a==='dismiss'){impReport=null;render()}
+  else if(a==='copy'){
+    var txt=window.__prompt||'';
+    var p=navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(txt):Promise.reject();
+    p.then(function(){toast('已複製')},function(){fallback=txt;render();var f=$('#fb');if(f){f.focus();f.select()}toast('請長按文字選取後複製')});
+  }
+  else if(a==='confirm'){
+    var key=b.dataset.key;
+    twice(b,key,function(){
+      if(key==='clearwrong'){S.wrong={}}
+      else if(key==='resetstats'){S.stats={};S.wrong={}}
+      else if(key==='resetbank'){S.bank=null;impMsg=''}
+      else if(key==='clearessays'){S.essays=[]}
+      save();render();toast('完成');
+    });
+  }
+});
+render();
+})();
+</script>

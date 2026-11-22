@@ -182,6 +182,37 @@ select:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
  .band div{padding:12px 2px}
 }
 </style>
+<style id="stage22">
+/* Stage 2.2：題號跳轉對話框、題號按鈕、提示文字 */
+.qtop button.cnt{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 15px var(--mono);cursor:pointer}
+.qtop button.cnt::after{content:"\25BE";margin-left:8px;color:var(--muted);font-size:12px}
+.verdict .jhint{display:block;margin-top:4px;font:400 14px/1.5 var(--sans,inherit);color:var(--muted)}
+#jmp{position:fixed;inset:0;z-index:90;display:flex;justify-content:center;align-items:flex-start;background:rgba(0,0,0,.45);padding:max(56px,calc(env(safe-area-inset-top) + 36px)) 14px 14px}
+#jmp .jbox{width:100%;max-width:420px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px}
+#jmp h2{margin:0;font-size:18px}
+#jmp p{margin:0;font-size:15px;line-height:1.6;color:var(--muted)}
+#jmp input{width:100%;min-height:52px;font-size:20px;text-align:center;font-family:var(--mono);padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+#jmp .jmsg{min-height:24px;color:var(--bad);font-size:15px;line-height:1.5}
+#jmp .jrow{display:flex;gap:10px}
+#jmp .jrow .btn{flex:1;min-height:52px;padding:0 12px}
+@media (max-width:600px){.qtop button.cnt{min-height:48px}}
+</style>
+<style id="stage221">
+/* Stage 2.2.1：數字方格選題 */
+#jmp .jbox{max-height:calc(100dvh - 80px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+#jmp .jtabs{display:flex;flex-wrap:wrap;gap:8px}
+#jmp .jtab{flex:1 1 auto;min-width:72px;min-height:44px;padding:0 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:500 15px var(--mono);cursor:pointer}
+#jmp .jtab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+#jmp .jgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+#jmp .jcell{min-height:48px;min-width:0;padding:0;border-radius:10px;border:2px solid transparent;font:600 16px var(--mono);cursor:pointer;background:var(--line);color:var(--ink)}
+#jmp .jcell.done{background:var(--good-bg);color:var(--good);border-color:var(--good)}
+#jmp .jcell.cur{background:var(--accent);color:#fff;border-color:var(--ink);box-shadow:0 0 0 2px var(--accent)}
+#jmp .jlegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;line-height:1.5;color:var(--muted)}
+#jmp .jlegend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px;border:1px solid var(--line);background:var(--line)}
+#jmp .jlegend i.done{background:var(--good-bg);border-color:var(--good)}
+#jmp .jlegend i.cur{background:var(--accent);border-color:var(--accent)}
+@media (min-width:768px){#jmp .jbox{max-width:640px}#jmp .jgrid{grid-template-columns:repeat(10,minmax(0,1fr))}}
+</style>
 
 <div class="app"><div id="guard"></div><main id="view"></main></div>
 <nav class="dock tabs" id="dock"></nav>
@@ -1389,7 +1420,7 @@ function pendingHTML(r){
 function quizHTML(){
   var q=sess.list[sess.i],n=sess.list.length,sel=sess.sel[sess.i],exam=sess.mode==='exam';
   var reveal=!exam&&sel!==null;
-  var h='<div class="stack" style="gap:16px"><div><div class="qtop"><button class="x" data-act="exit" aria-label="離開">✕</button><span class="cnt">'+(sess.i+1)+' / '+n+'</span>'+(exam?'<span class="clock" id="clock">'+fmt(Math.round((Date.now()-sess.t0)/1000))+'</span>':'')+'</div><div class="bar"><i style="width:'+((sess.i+(reveal?1:0))/n*100)+'%"></i></div></div>';
+  var h='<div class="stack" style="gap:16px"><div><div class="qtop"><button class="x" data-act="exit" aria-label="離開">✕</button>'+(exam?'<span class="cnt">'+(sess.i+1)+' / '+n+'</span>':'<button class="cnt" data-act="jump-open" aria-label="跳至指定題號，目前第 '+(sess.i+1)+' 題，共 '+n+' 題">'+(sess.i+1)+' / '+n+'</button>')+(exam?'<span class="clock" id="clock">'+fmt(Math.round((Date.now()-sess.t0)/1000))+'</span>':'')+'</div><div class="bar"><i style="width:'+((sess.i+(reveal?1:0))/n*100)+'%"></i></div></div>';
   if(sess.frozen)h+='<div class="note alert stack" style="gap:8px">此練習已在其他分頁變更或完成，這個畫面已停止作答。<button class="btn sm" style="text-decoration:none" data-act="reload">重新整理</button></div>';
   if(sess.commitErr)h+='<div class="note alert stack" style="gap:8px">'+esc(sess.commitErr)+(sess.commitStale?'<button class="btn sm" style="text-decoration:none" data-act="reload">重新載入</button>':'')+'</div>';
   if(sess.confirmExit&&exam)h+='<div class="note">放棄這次模擬考？<button data-act="exit-yes">放棄</button>　<button data-act="exit-no">繼續作答</button></div>';
@@ -1399,10 +1430,10 @@ function quizHTML(){
   h+=q.opts.map(function(o,k){
     var c='opt';
     if(reveal){if(k===q.ans)c+=' good';else if(k===sel)c+=' bad'}else if(sel===k)c+=' picked';
-    return '<button class="'+c+'" data-act="pick" data-k="'+k+'"'+(reveal?' disabled':'')+'><span class="ltr">'+L[k]+'</span><span class="otxt">'+esc(o)+'</span></button>';
+    return '<button class="'+c+'" data-act="pick" data-k="'+k+'"'+(reveal&&!(k===q.ans&&sess.i<n-1&&!sess.frozen&&!sess.committing)?' disabled':'')+'><span class="ltr">'+L[k]+'</span><span class="otxt">'+esc(o)+'</span></button>';
   }).join('')+'</div>';
   if(reveal){
-    h+='<p class="verdict '+(sel===q.ans?'good':'bad')+'">'+(sel===q.ans?'答對了':'答錯了，正確答案是 '+L[q.ans])+'</p>'+expBlock('解析',q.exp?esc(q.exp):'',q.id)+(flagOf(q)&&flagOf(q).conf?'<div class="note">'+(q.pend?'這題已標記為答案待確認（來自 PDF 匯入），請對照原始解答。':'題庫裡有另一筆題幹、選項相同但答案不同的題目，這題答案待確認。')+'</div>':'');
+    h+='<p class="verdict '+(sel===q.ans?'good':'bad')+'">'+(sel===q.ans?'答對了'+(sess.i<n-1?'<span class="jhint">再點一次正確答案可前往下一題</span>':''):'答錯了，正確答案是 '+L[q.ans]+(sess.i<n-1?'<span class="jhint">再點一次正確答案可前往下一題</span>':''))+'</p>'+expBlock('解析',q.exp?esc(q.exp):'',q.id)+(flagOf(q)&&flagOf(q).conf?'<div class="note">'+(q.pend?'這題已標記為答案待確認（來自 PDF 匯入），請對照原始解答。':'題庫裡有另一筆題幹、選項相同但答案不同的題目，這題答案待確認。')+'</div>':'');
   }
   h+='</div>';
   return h;
@@ -1632,6 +1663,90 @@ window.addEventListener('storage',function(e){
   else if(e.key===PKEY&&view==='home')render();
 });
 
+/* ---------- Stage 2.2：指定題號跳轉（只限一般練習／錯題複習）----------
+   只改 sess.i（目前位置）；sess.sel 是「每題一格」的陣列，跳題不讀不寫，不呼叫 rec()，不改題目順序。 */
+function jumpAllowed(){return !!sess&&sess.mode!=='exam'&&!sess.frozen&&!sess.committing&&!sess.committed&&!sess.confirmExit}
+function jumpParse(v,n){
+  v=String(v==null?'':v).trim();
+  if(v==='')return {err:'請輸入題號。'};
+  if(!/^\d+$/.test(v))return {err:'題號只能輸入整數數字，不可有小數點、負號或文字。'};
+  var x=parseInt(v,10);
+  if(x<1)return {err:'題號必須從 1 開始。'};
+  if(x>n)return {err:'超出範圍，這份練習共 '+n+' 題。'};
+  return {ok:x-1};
+}
+var jmpSeg=0,jmpMode='grid';
+function jumpBody(){
+  var n=sess.list.length,cur=sess.i,h;
+  if(jmpMode==='input'){
+    return '<h2 id="jmph">跳至指定題號</h2><p>目前第 '+(cur+1)+' 題，共 '+n+' 題。<br>請輸入 1 到 '+n+' 之間的題號。</p>'
+      +'<input type="text" id="jmpin" inputmode="numeric" autocomplete="off" enterkeyhint="go" placeholder="1 – '+n+'" aria-label="題號">'
+      +'<div class="jmsg" id="jmpmsg" role="alert" aria-live="polite"></div>'
+      +'<div class="jrow"><button class="btn" data-act="jump-mode" data-v="grid">返回方格</button><button class="btn primary" data-act="jump-go">跳至該題</button></div>'
+      +'<div class="jrow"><button class="btn" data-act="jump-cancel">取消</button></div>';
+  }
+  var segs=Math.ceil(n/50);if(jmpSeg<0||jmpSeg>=segs)jmpSeg=0;
+  var from=jmpSeg*50,to=Math.min(from+50,n);
+  h='<h2 id="jmph">選擇題目</h2><p>目前第 '+(cur+1)+' 題，共 '+n+' 題。<br>點擊數字即可跳轉。</p>';
+  if(segs>1){
+    h+='<div class="jtabs" role="tablist">';
+    for(var g=0;g<segs;g++){
+      var f=g*50+1,t=Math.min(g*50+50,n);
+      h+='<button class="jtab" role="tab" data-act="jump-seg" data-v="'+g+'" aria-selected="'+(g===jmpSeg)+'">'+(f===t?f:f+'–'+t)+'</button>';
+    }
+    h+='</div>';
+  }
+  h+='<div class="jgrid">';
+  for(var k=from;k<to;k++){
+    var sv=sess.sel[k],done=(sv!==null&&sv!==undefined),isCur=(k===cur);
+    h+='<button class="jcell'+(isCur?' cur':done?' done':'')+'" data-act="jump-cell" data-v="'+k+'" aria-label="第 '+(k+1)+' 題，'+(isCur?'目前題目':done?'已作答':'未作答')+'"'+(isCur?' aria-current="true"':'')+'>'+(k+1)+'</button>';
+  }
+  h+='</div><div class="jlegend"><span><i class="cur"></i>藍色＝目前題目</span><span><i class="done"></i>綠色＝已作答</span><span><i></i>灰色＝未作答</span></div>'
+    +'<div class="jrow"><button class="btn" data-act="jump-mode" data-v="input">輸入指定題號</button><button class="btn primary" data-act="jump-cancel">關閉</button></div>';
+  return h;
+}
+function jumpPaint(){
+  var d=document.getElementById('jmp');if(!d)return;
+  var bx=d.querySelector('.jbox');if(bx)bx.innerHTML=jumpBody();
+  if(jmpMode==='input'){var inp=document.getElementById('jmpin');if(inp)inp.focus()}
+}
+function jumpOpen(){
+  if(!jumpAllowed())return;
+  var d=document.getElementById('jmp');if(d)d.remove();
+  jmpMode='grid';jmpSeg=Math.floor(sess.i/50);
+  d=document.createElement('div');d.id='jmp';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','jmph');
+  d.innerHTML='<div class="jbox"></div>';
+  document.body.appendChild(d);document.body.style.overflow='hidden';
+  jumpPaint();
+}
+function jumpCell(k){
+  if(!jumpAllowed()){jumpClose();return}
+  k=Number(k);
+  if(!Number.isInteger(k)||k<0||k>=sess.list.length)return;
+  jumpClose();
+  if(k===sess.i)return;
+  sess.i=k;
+  if(!progSave())toast('進度暫存失敗');
+  render();window.scrollTo(0,0);
+}
+function jumpClose(){var d=document.getElementById('jmp');if(d)d.remove();document.body.style.overflow=''}
+function jumpGo(){
+  var inp=document.getElementById('jmpin'),msg=document.getElementById('jmpmsg');
+  if(!jumpAllowed()){jumpClose();return}
+  var r=jumpParse(inp?inp.value:'',sess.list.length);
+  if(r.err){if(msg)msg.textContent=r.err;if(inp)inp.focus();return}
+  jumpClose();
+  if(r.ok===sess.i)return;
+  sess.i=r.ok;
+  if(!progSave())toast('進度暫存失敗');
+  render();window.scrollTo(0,0);
+}
+document.addEventListener('keydown',function(e){
+  if(!document.getElementById('jmp'))return;
+  if(e.key==='Escape'){jumpClose()}
+  else if(e.key==='Enter'&&e.target&&e.target.id==='jmpin'){e.preventDefault();jumpGo()}
+});
+document.addEventListener('input',function(e){if(e.target&&e.target.id==='jmpin'){var m=document.getElementById('jmpmsg');if(m)m.textContent=''}});
 function wsk(s){return String(s).normalize('NFKC').replace(/\s+/g,'')}
 function qkey(q){return wsk(q.q)+'\u0001'+q.opts.map(wsk).sort().join('\u0002')}
 function ctext(q){return wsk(q.opts[q.ans])}
@@ -2515,7 +2630,12 @@ document.addEventListener('click',function(e){
   else if(a==='start'){start(b.dataset.mode)}
   else if(a==='pick'){
     var i=sess.i,q=sess.list[i],kk=Number(b.dataset.k);
-    if(sess.mode!=='exam'){if(sess.sel[i]!==null||sess.frozen||sess.committing)return;sess.sel[i]=kk;if(!progSave())toast('進度暫存失敗')}
+    if(sess.mode!=='exam'){
+      if(sess.frozen||sess.committing||Date.now()<(sess.advLock||0))return;
+      if(sess.sel[i]!==null){
+        if(kk===q.ans&&i<sess.list.length-1&&Date.now()-(sess.selT||0)>=350){sess.advLock=Date.now()+500;sess.i++;if(!progSave())toast('進度暫存失敗');render();window.scrollTo(0,0)}
+        return}
+      sess.sel[i]=kk;sess.selT=Date.now();if(!progSave())toast('進度暫存失敗')}
     else sess.sel[i]=kk;
     render();
   }
@@ -2530,6 +2650,12 @@ document.addEventListener('click',function(e){
   else if(a==='exit-drop-no'){sess.confirmDrop=false;render()}
   else if(a==='exit-drop-yes'){if(sess.committing)return;progDrop();sess=null;go('home');toast('已放棄練習，未計入統計')}
   else if(a==='reload'){location.reload()}
+  else if(a==='jump-open'){jumpOpen()}
+  else if(a==='jump-cancel'){jumpClose()}
+  else if(a==='jump-seg'){if(jumpAllowed()){jmpSeg=Number(b.dataset.v);jumpPaint()}}
+  else if(a==='jump-mode'){if(jumpAllowed()){jmpMode=b.dataset.v==='input'?'input':'grid';jumpPaint()}}
+  else if(a==='jump-cell'){jumpCell(b.dataset.v)}
+  else if(a==='jump-go'){jumpGo()}
   else if(a==='prog-resume'){progResume()}
   else if(a==='prog-restart'||a==='prog-drop'){twice(b,a,function(){progDrop();progMsg='';render();toast('已捨棄未完成的練習')})}
   else if(a==='import'){var r0=parseInput(impText);r0.file='貼上文字';if(r0.fatal){impMsg=r0.fatal;impReport=null;render();return}pending=null;applyImport(r0,b,true)}

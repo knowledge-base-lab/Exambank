@@ -1,5 +1,5 @@
 <title>Exam Bank 第二階段（測試版）</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1B2A4A">
 <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
@@ -212,6 +212,17 @@ select:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
 #jmp .jlegend i.done{background:var(--good-bg);border-color:var(--good)}
 #jmp .jlegend i.cur{background:var(--accent);border-color:var(--accent)}
 @media (min-width:768px){#jmp .jbox{max-width:640px}#jmp .jgrid{grid-template-columns:repeat(10,minmax(0,1fr))}}
+</style>
+<style id="stage23">
+/* Stage 2.3.1：間隔複習唯讀統計卡 */
+.srs .srsst{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.srs .srsst div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;min-width:0}
+.srs .srsst b{display:block;font:500 20px/1.2 var(--mono)}
+.srs .srsst span{font-size:13px;color:var(--muted)}
+/* Stage 2.3.1：iPhone 固定比例。touch-action:manipulation 只關閉雙擊放大，保留捲動與點擊；#ivstage 的 touch-action:none（圖片檢視器自己的縮放）不動 */
+html,body,button,a,label,summary,input,select,textarea,[data-act]{touch-action:manipulation}
+/* 文字輸入框一律 16px，避免 iPhone（含橫向）點入輸入框時被自動放大 */
+textarea,input[type=text],select{font-size:16px}
 </style>
 
 <div class="app"><div id="guard"></div><main id="view"></main></div>
@@ -873,7 +884,8 @@ var SAMPLE=[
 /* ---------- state ---------- */
 var S={bank:null,stats:{},wrong:{},essays:[],exams:[],eans:{},emark:{},settings:{order:'seq',shuffle:false,examN:20}};
 /* ---------- 資料保護、備份與還原（第一階段）---------- */
-var KNOWN={bank:1,stats:1,wrong:1,essays:1,exams:1,eans:1,emark:1,settings:1};
+var KNOWN={bank:1,stats:1,wrong:1,essays:1,exams:1,eans:1,emark:1,settings:1,srs:1};
+var srsBad='';  /* Stage 2.3.1：S.srs 無法使用的原因；空字串＝可用。不為空時複習資料唯讀，原內容原樣保留 */
 var SNAP='examBank.snap.v1',RESCUE='examBank.rescue.v1';
 var PKEY='examBank.prog.v1',DKEY='examBank.done.v1',mainRaw=null,lastProgRaw=null,progMsg='',progNote='';
 var loadErr='',rawBad=null,saveBad=false,bkOpen=false,bkMsg='',bkIn='',bkOut='',bkPrev=null,bkNeedForce=false;
@@ -904,6 +916,7 @@ function loadState(raw){
   S.exams=Array.isArray(o.exams)?o.exams:[];S.eans=o.eans||{};S.emark=o.emark||{};
   S.settings=Object.assign(S.settings,o.settings||{});
   Object.keys(o).forEach(function(k){if(!KNOWN[k])S[k]=o[k]});
+  srsLoad(o);
   return '';
 }
 function save(){
@@ -1291,6 +1304,7 @@ function homeHTML(){
   var rand=S.settings.order==='rand';
   var h='<div class="stack"><header><h1>Exam Bank</h1><p class="sub">繁體中文考試題庫練習</p></header>';
   h+=progCardHTML();
+  h+=srsCardHTML();
   if(!S.bank)h+='<div class="note">目前是 '+SAMPLE.length+' 題範例題。<button data-act="tab" data-v="bank">貼上你的題目</button>即可換成自己的題庫。</div>';
   if(exF){var xm=examById(exF);h+='<div class="note">目前只練習：'+esc(xm?xm.name:'這份考卷')+'（'+P+' 題）<button data-act="exam-clear">改回全部</button></div>'}
   h+='<div class="band"><div><b>'+B.length+'</b><span>題庫</span></div><div><b>'+seen+'</b><span>已練習</span></div><div><b>'+acc+'</b><span>正確率</span></div><div><b>'+wl+'</b><span>錯題</span></div></div>';
@@ -1517,6 +1531,94 @@ function finish(){
   sess.result={ok:ok,n:sess.list.length,miss:miss,secs:Math.round((Date.now()-sess.t0)/1000)};
   go('result');
 }
+/* ---------- Stage 2.3.1：間隔複習資料層（S.srs）----------
+   S.srs={v:1,items:{<題目id>:{…}},history:[…]}，與 S.wrong／S.stats 完全分開。
+   載入：欄位不存在時維持「不存在」（視同空資料，不寫入；第一次需要記錄時才建立 {v:1,…}，所以沒有答錯過的使用者其主資料位元組完全不變）；存在就原樣保留。版本不明或格式錯誤時不修復、不重設、不覆蓋（srsBad 不為空），
+   複習功能唯讀，其他功能照常。日期一律用裝置當地日期（YYYY-MM-DD），不使用 UTC。
+   2.3.1 只處理「一般練習／錯題複習答錯 → 加入或重設為階段 1、隔天」；答對不推進階段（2.3.2 才有複習模式）。 */
+function srsEmpty(){return {v:1,items:{},history:[]}}
+function srsPad(n){return (n<10?'0':'')+n}
+function srsFmt(d){return d.getFullYear()+'-'+srsPad(d.getMonth()+1)+'-'+srsPad(d.getDate())}
+function srsToday(){return srsFmt(new Date())}
+function srsDateOk(x){
+  if(typeof x!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(x))return false;
+  var d=new Date(+x.slice(0,4),+x.slice(5,7)-1,+x.slice(8,10),12,0,0);
+  return srsFmt(d)===x;
+}
+/* 以當天中午為基準加減日曆日，避免夏令時間切換日少算或多算一天 */
+function srsAddDays(s,n){return srsFmt(new Date(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10)+n,12,0,0))}
+function srsCnt(x){return Number.isInteger(x)&&x>=0}
+/* 只檢查、不修改。回傳原因文字，空字串代表可用 */
+function srsCheck(x){
+  if(!isObj(x))return '格式不是物件';
+  if(x.v!==1)return (typeof x.v==='number'&&x.v>1)?'資料版本（'+x.v+'）比目前程式新':'資料版本不明';
+  if(!isObj(x.items))return 'items 欄位格式不正確';
+  if(!Array.isArray(x.history))return 'history 欄位格式不正確';
+  var ks=Object.keys(x.items),i,it,h;
+  for(i=0;i<ks.length;i++){
+    it=x.items[ks[i]];
+    if(!isObj(it)||(it.status!=='active'&&it.status!=='done'))return '複習項目的狀態不正確';
+    if(!Number.isInteger(it.stage)||it.stage<1||it.stage>5)return '複習項目的階段不正確';
+    if(it.status==='active'&&!srsDateOk(it.nextReviewDate))return '複習項目的下次複習日期不正確';
+    if(!srsDateOk(it.firstWrongDate))return '複習項目的首次答錯日期不正確';
+    if(!srsCnt(it.reviewCount)||!srsCnt(it.correctCount)||!srsCnt(it.wrongCount))return '複習項目的次數不正確';
+  }
+  for(i=0;i<x.history.length;i++){h=x.history[i];if(!isObj(h)||typeof h.sid!=='string'||typeof h.q!=='string'||!srsDateOk(h.d))return '複習歷史格式不正確'}
+  return '';
+}
+function srsLoad(o){
+  srsBad='';
+  if(Object.prototype.hasOwnProperty.call(o,'srs')&&o.srs!==undefined){S.srs=o.srs;srsBad=srsCheck(o.srs)}
+  else delete S.srs;
+}
+/* 一般練習／錯題複習完成時：答錯的題目加入（階段 1、隔天）或重設為階段 1。
+   冪等：歷史每筆帶 sid＋題目 id，同一個 sid 已處理過的題目不再處理；不依賴只保留 20 筆的提交帳本。
+   不碰 S.wrong、S.stats；次數與歷史保留。回傳新增的歷史筆數。 */
+function srsApplyWrong(cur,today){
+  var sid=cur.sid,H=S.srs?S.srs.history:[],seen={},n=0,i,next=srsAddDays(today,1),t=Date.now();
+  for(i=0;i<H.length;i++)if(H[i].sid===sid)seen[H[i].q]=1;
+  cur.list.forEach(function(q,k){
+    var s=cur.sel[k];if(s===null||s===undefined||s===q.ans)return;
+    var key=String(q.id);if(seen[key])return;seen[key]=1;
+    if(!S.srs){S.srs=srsEmpty();H=S.srs.history}
+    var it=S.srs.items[key],kind,from;
+    if(!it){
+      S.srs.items[key]={questionId:q.id,status:'active',stage:1,nextReviewDate:next,firstWrongDate:today,reviewCount:0,correctCount:0,wrongCount:0,lastReviewDate:null,completedDate:null};
+      kind='add';from=0;
+    }else{
+      kind=it.status==='done'?'readd':'reset';from=it.stage;
+      it.status='active';it.stage=1;it.nextReviewDate=next;it.completedDate=null;
+    }
+    H.push({sid:sid,q:key,d:today,t:t,kind:kind,src:cur.mode,r:'w',from:from,to:1,next:next});n++;
+  });
+  return n;
+}
+/* 唯讀摘要：只讀取，不寫入任何資料 */
+function srsSummary(){
+  var today=srsToday(),m=bankMap(),D=S.srs||srsEmpty(),r={today:today,total:0,stage:[0,0,0,0,0],done:0,due:0,over:0,orphan:0};
+  Object.keys(D.items).forEach(function(k){
+    var it=D.items[k];r.total++;
+    if(!m[k]){r.orphan++;return}
+    if(it.status==='done'){r.done++;return}
+    r.stage[it.stage-1]++;
+    if(it.nextReviewDate<today)r.over++;else if(it.nextReviewDate===today)r.due++;
+  });
+  return r;
+}
+function srsCardHTML(){
+  var h='<section class="card stack srs" style="gap:12px"><h2>間隔複習</h2>';
+  if(srsBad)return h+'<p class="msg" style="color:var(--bad)">間隔複習資料目前無法使用（'+esc(srsBad)+'）。原始資料已保留，沒有被修改；其他功能不受影響。</p></section>';
+  var r=srsSummary();
+  if(!r.total)return h+'<p class="msg">還沒有複習題目。一般練習或錯題複習答錯的題目，完成後會自動加入間隔複習。</p></section>';
+  var iv=['1 天','3 天','7 天','14 天','30 天'];
+  h+=esiBand([r.due,'今日待複習'],[r.over,'逾期未複習'],[r.total,'累積題數'],[r.orphan,'失效題目']);
+  h+='<p class="msg" style="margin:0">各階段題數（複習間隔）</p><div class="srsst">'
+    +r.stage.map(function(c,i){return '<div><b>'+c+'</b><span>'+iv[i]+'</span></div>'}).join('')
+    +'<div><b>'+r.done+'</b><span>已完成</span></div></div>';
+  h+='<p class="msg" style="margin:0">這裡目前只顯示資料；複習功能會在之後的版本加入。失效題目是題庫中已找不到的題目，資料保留不刪除。</p></section>';
+  return h;
+}
+
 /* ---------- 未完成練習：自動儲存、續作與完成後提交（一般練習／錯題複習；模擬考不使用）----------
    進度存在獨立的 examBank.prog.v1；作答期間不碰 S.stats / S.wrong。
    提交時（commitPractice）才一次寫入統計，並在同一次寫入放進提交帳本 S.commits；
@@ -1618,16 +1720,20 @@ function commitCore(sess_,locked){
   /* 2. 已提交過就不再寫統計 */
   if(isCommitted(sid))return {already:true};
   /* 3. 在記憶體套用本次有效作答（規則與 rec() 相同），並放進帳本 */
+  var srsSnap=srsBad?null:(S.srs===undefined?'':JSON.stringify(S.srs)),srsAdd=0,srsSkip=0;
   var snap={stats:{},wrong:{},hadC:!!S.commits,commits:S.commits?JSON.parse(JSON.stringify(S.commits)):null};
   sess_.list.forEach(function(q,i){var s=sess_.sel[i];if(s===null)return;
     if(!(q.id in snap.stats)){snap.stats[q.id]=S.stats[q.id]?{c:S.stats[q.id].c,w:S.stats[q.id].w}:null;snap.wrong[q.id]=S.wrong[q.id]?1:0}});
   var back=function(){
     Object.keys(snap.stats).forEach(function(id){if(snap.stats[id]===null)delete S.stats[id];else S.stats[id]=snap.stats[id];if(snap.wrong[id])S.wrong[id]=1;else delete S.wrong[id]});
     if(snap.hadC)S.commits=snap.commits;else delete S.commits;
+    if(srsSnap!==null){if(srsSnap==='')delete S.srs;else S.srs=JSON.parse(srsSnap)}
   };
   sess_.list.forEach(function(q,i){var s=sess_.sel[i];if(s===null)return;
     var good=s===q.ans,st=S.stats[q.id]||{c:0,w:0};good?st.c++:st.w++;S.stats[q.id]=st;
     if(!good)S.wrong[q.id]=1;else if(sess_.mode==='wrong')delete S.wrong[q.id]});
+  if(srsBad){sess_.list.forEach(function(q,i){var s=sess_.sel[i];if(s!==null&&s!==undefined&&s!==q.ans)srsSkip++})}
+  else srsAdd=srsApplyWrong(sess_,srsToday());
   S.commits=S.commits||{};S.commits[sid]=Date.now();
   var ks=Object.keys(S.commits).sort(function(a,b){return S.commits[b]-S.commits[a]});
   ks.slice(20).forEach(function(k){delete S.commits[k]});
@@ -1638,7 +1744,7 @@ function commitCore(sess_,locked){
   /* 5. 主資料與帳本確認成功後，才更新 done 紀錄，再清除進度 */
   var d=doneIds().filter(function(x){return x!==sid});d.push(sid);d=d.slice(-20);
   var dv=JSON.stringify({ids:d}),dok=LS.set(DKEY,dv)&&LS.get(DKEY)===dv;
-  return {ok:true,doneWarn:!dok};
+  return {ok:true,doneWarn:!dok,srsAdd:srsAdd,srsSkip:srsSkip};
 }
 function commitPractice(){
   if(!sess||sess.committing||sess.frozen||sess.committed)return;
@@ -1653,6 +1759,7 @@ function commitPractice(){
     cur.result={ok:ok,n:cur.list.length,miss:miss,secs:Math.round((Date.now()-cur.t0)/1000)};
     if(sess===cur)go('result');
     if(r.already)toast('這份練習先前已計入統計，沒有重複計算');
+    else if(r.srsSkip)toast('間隔複習資料目前唯讀，這次答錯的題目沒有加入複習');
   },function(e){cur.committing=false;cur.commitErr='提交時發生錯誤：'+(e&&e.message||e)+'。進度已保留，統計沒有變動。';if(sess===cur)render()});
 }
 /* 離開背景時再存一次；其他分頁改動同一份進度時，這個分頁停止作答以免兩邊分歧 */
